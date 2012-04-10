@@ -50,3 +50,9 @@ scratch
 secret.org
 .emacs.desktop*
 .*~
+
+## ignore OSX related files
+.DS_Store
+
+## ignore SVN
+.svn
