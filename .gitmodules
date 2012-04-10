@@ -1,0 +1,6 @@
+[submodule "submodules/org-mode"]
+	path = submodules/org-mode
+	url = git://orgmode.org/org-mode.git
+[submodule "submodules/magit"]
+	path = submodules/magit
+	url = git://github.com/magit/magit.git
