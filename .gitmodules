@@ -4,3 +4,6 @@
 [submodule "submodules/magit"]
 	path = submodules/magit
 	url = git://github.com/magit/magit.git
+[submodule "submodules/color-theme-solarized"]
+	path = submodules/color-theme-solarized
+	url = git://github.com/sellout/emacs-color-theme-solarized.git
