@@ -9,6 +9,9 @@
 (setq starter-kit-dir
       (file-name-directory (or load-file-name (buffer-file-name))))
 
+;; load custom orgmode instead of bundled one
+(require 'org-install)
+
 ;; load up the starter kit
 (org-babel-load-file (expand-file-name "starter-kit.org" starter-kit-dir))
 
