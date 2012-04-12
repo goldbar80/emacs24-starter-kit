@@ -141,6 +141,19 @@ Tell RefTeX where the bibliography files are.
 #+end_src
 
 ** Local Org-mode Settings
+*** Setting file for agenda
+#+name: orgmode agenda
+#+begin_src emacs-lisp
+  ;; Set to the location of your Org files on your local system
+  (setq org-directory "~/Documents/org")
+  ;; Set to the files (or directory of files) you want sync'd
+  (setq org-agenda-files (quote ("~/Documents/org")))
+  ;; Set to <your Dropbox root directory>/MobileOrg.
+  ;;(setq org-mobile-directory "~/Dropbox/MobileOrg")
+  ;; Set to the name of the file where new notes will be stored
+  ;;(setq org-mobile-inbox-for-pull "~/Documents/org/mobile.org")
+  
+#+end_src
 *** Local Org-mode Smart-quote binding
 When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by default.
 
@@ -649,6 +662,40 @@ Create =html= files form the =org= sources, to help with documentation. To set u
        '(lambda ()
        (ibuffer-auto-mode 1)
        (ibuffer-switch-to-saved-filter-groups "home")))
+#+end_src
+** Matlab
+#+name: matlab-configure
+#+begin_src emacs-lisp
+  (load-library "matlab-load")
+  (setq matlab-shell-command-switches '("-nodesktop -nosplash"))
+  (setq matlab-indent-function-body t)
+#+end_src
+** Graphviz dot mode
+#+name: dot mode
+#+begin_src emacs-lisp
+  (load "graphviz-dot-mode")
+  (set-default 'autopair-dont-activate #' (lambda () (eq major-mode 'graphviz-dot-mode))) 
+#+end_src
+** Workgroups
+#+name: workgropus
+#+begin_src emacs-lisp
+  (require 'workgroups)
+  (workgroups-mode t)
+  (wg-load "~/.emacs.d/wg.saved")
+  (setq wg-switch-on-load nil)
+  (setq wg-morph-on nil)
+#+end_src
+** Writegood mode
+#+name: writegood mode
+#+begin_src emacs-lisp
+  (require 'writegood-mode)
+  (global-set-key "\C-cg" 'writegood-mode)
+#+end_src
+
+** Psvn
+#+name: psvn
+#+begin_src emacs-lisp
+  (require 'psvn)
 #+end_src
 
 ** Final Custom elements
