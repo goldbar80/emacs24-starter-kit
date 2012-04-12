@@ -7,3 +7,6 @@
 [submodule "submodules/color-theme-solarized"]
 	path = submodules/color-theme-solarized
 	url = git://github.com/sellout/emacs-color-theme-solarized.git
+[submodule "submodules/yasnippet/text-mode/org-mode"]
+	path = submodules/yasnippet/text-mode/org-mode
+	url = http://github.com/eschulte/yasnippet-org-mode.git
