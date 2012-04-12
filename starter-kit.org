@@ -441,9 +441,13 @@ After we've loaded all the Starter Kit defaults, lets load the User's stuff.
       (add-to-list 'load-path elisp-dir)
       ;; add the submodule directory to the load path ;; by goldbar
       (add-to-list 'load-path submodule-dir)
-      ;; load specific files
+      ;; load specific files - elisp-dir
       (when (file-exists-p elisp-dir)
         (let ((default-directory elisp-dir))
+          (normal-top-level-add-subdirs-to-load-path)))
+      ;; load specific files - submoule-dir 
+      (when (file-exists-p submodule-dir)
+        (let ((default-directory submodule-dir))
           (normal-top-level-add-subdirs-to-load-path)))
       ;; load system-specific config
       (sk-load system-name)
