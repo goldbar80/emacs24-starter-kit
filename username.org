@@ -1,0 +1,845 @@
+* User Specific Customization
+** Color theme (> Emacs 24)
+#+name: setting color theme
+#+begin_src emacs-lisp
+  (add-to-list 'custom-theme-load-path (expand-file-name "color-theme-solarized" (expand-file-name "submodules" starter-kit-dir)))
+  (if window-system
+      (load-theme 'solarized-dark t)
+    (load-theme 'tangosoft t) ;; Emacs started in tty
+    )
+#+end_src
+
+** Full screen
+#+name: full screen
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c f") 'ns-toggle-fullscreen)
+#+end_src
+
+** Recent file menu
+#+name: recentfile
+#+begin_src emacs-lisp
+  (require 'recentf)
+  (recentf-mode 1)
+#+end_src
+** Re-sizing inside the frame
+When your frame (i.e., the main Emacs window) is split into different
+parts (e.g. using =C-x 2= or =C-x 3=) we sometimes want to resize
+these parts dynamically. This defines =Shift-C-[arrow keys]= so you
+can do this.
+
+#+name: resize-splits
+#+begin_src emacs-lisp
+  ;; resizing 'windows' (i.e., inside the frame)
+  (global-set-key (kbd "S-C-<left>") 'shrink-window-horizontally)
+  (global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
+  (global-set-key (kbd "S-C-<down>") 'shrink-window)
+  (global-set-key (kbd "S-C-<up>") 'enlarge-window)
+#+end_src
+** Succinct UI
+
+Disable tool-bar and scroll-bar.
+
+#+name: minimal ui
+#+begin_src emacs-lisp
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+#+end_src
+** Local LaTeX settings
+*** In-text Smart Quotes (XeLaTeX only)
+    Redefine TeX-open-quote and TeX-close-quote to be smart quotes by default. Below, in the local org-mode settings, we'll also map the relevant function to a key we can use in org-mode, too. If you don't use XeLaTeX for processing all your =.tex= files, you should disable this option.
+
+#+source: smart-quotes
+#+begin_src emacs-lisp
+  (setq TeX-open-quote "“")
+  (setq TeX-close-quote "”")
+#+end_src
+
+*** SyncTeX, PDF mode, Skim
+Set up AUCTeX to work with the Skim PDF viewer.
+
+#+name: auctex skim
+#+begin_src emacs-lisp
+  ;;Synctex with Skim
+  (add-hook 'TeX-mode-hook
+            (lambda ()
+              (add-to-list 'TeX-output-view-style
+                           '("^pdf$" "."
+                             "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b")))
+            )
+
+  ;;Make emacs aware of multi-file projects
+  (setq-default TeX-master nil)
+
+  ;; Auto-raise Emacs on activation (from Skim, usually)
+  (defun raise-emacs-on-aqua()
+  (shell-command "osascript -e 'tell application \"Emacs\" to activate' &"))
+  (add-hook 'server-switch-hook 'raise-emacs-on-aqua)
+  (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+  (setq TeX-source-correlate-method 'synctex)
+#+end_src
+
+*** Local RefTeX Settings
+Tell RefTeX where the bibliography files are.
+
+#+name: local-reftex
+#+begin_src emacs-lisp
+    ;; Make RefTex able to find my local bib files
+    (setq reftex-bibpath-environment-variables
+    '("/Users/goldbar/texmf/bibtex/bib"))
+
+    ;; Default bibliography
+    (setq reftex-default-bibliography
+    '("/Users/goldbar/Documents/BidDeskPapers/goldbar.bib"))
+
+
+    ;; CDLaTex minor mode: tab-trigger environments, paired paren
+    ;; insertion, etc
+    ;; (autoload 'cdlatex-mode "cdlatex" "CDLaTeX Mode" t)
+    ;; (autoload 'turn-on-cdlatex "cdlatex" "CDLaTeX Mode" nil)
+    ;; (add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)   ; with AUCTeX LaTeX
+    ;;                                         ; mode
+
+    ;; set which characters are autopaired // Doesn't work. Set in custom, below.
+    ;; (add-hook 'cdlatex-mode-hook
+    ;;   (function (lambda ()
+    ;;               (setq cdlatex-paired-parens
+    ;;                     '("$[{("))
+    ;;             )))
+#+end_src
+
+*** Add shell escape option for LaTeX of AucTex command
+#+srcname: shell-escape
+#+begin_src emacs-lisp
+  (eval-after-load "tex"
+    '(setcdr (assoc "LaTeX" TeX-command-list)
+             '("%`%l%(mode) -shell-escape%' %t"
+               TeX-run-TeX nil (latex-mode doctex-mode) :help "Run LaTeX")
+             ))
+#+end_src
+*** Add latexmk command to AUCTeX
+#+srcname: auctex-latexmk
+#+begin_src emacs-lisp
+  (eval-after-load "tex"
+    '(add-to-list 'TeX-expand-list
+                  '("%(-pdf)" (lambda ()
+                                 (if (and (not TeX-Omega-mode) (or TeX-PDF-mode TeX-DVI-via-PDFTeX)) "-pdflatex='pdflatex -shell-escape -synctex=1 -interaction=nonstopmode' -pdf" "")))))
+
+  (eval-after-load "tex"
+    '(add-to-list 'TeX-command-list
+                  '("Make" "latexmk %(-pdf) %t" TeX-run-TeX nil
+                    (latex-mode doctex-mode) :help "Run latexmk")))
+
+  (eval-after-load "latex"
+    '(add-to-list 'LaTeX-clean-intermediate-suffixes "\\.fdb_latexmk"))
+
+
+#+end_src
+*** Add flyspell mode hook
+#+srcname: auctex-flyspell
+#+begin_src emacs-lisp :tangle no
+  (add-hook 'LaTeX-mode-hook 'turn-on-flyspell)
+#+end_src
+
+** Local Org-mode Settings
+*** Local Org-mode Smart-quote binding
+When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by default.
+
+#+source: org-mode-smartquote-key
+#+begin_src emacs-lisp :tangle no
+  (add-hook 'org-mode-hook 'smart-quote-keys)
+
+  (defun smart-quote-keys ()
+    (require 'typopunct)
+    (typopunct-change-language 'english)
+    (local-set-key (kbd "C-c \'") 'typopunct-insert-single-quotation-mark)
+    (local-set-key (kbd "C-c \"") 'typopunct-insert-quotation-mark)
+    )
+#+end_src
+
+*** Local Org-mode Archive Settings
+    Where archived projects and tasks go.
+#+source: orgmode-archive
+#+begin_src emacs-lisp :tangle no
+  (setq org-archive-location "~/Dropbox/Org/archive.org::From %s")
+#+end_src
+
+*** Local Org-mode Mobile Settings
+   Sync orgmode files with Dropbox and iPhone.
+#+src-name: orgmode-mobile
+#+begin_src emacs-lisp :tangle no
+   ;; Set to the location of your Org files on your local system
+   (setq org-directory "~/Documents/org")
+   ;; Set to the files (or directory of files) you want sync'd
+   (setq org-agenda-files (quote ("~/Documents/org")))
+   ;; Set to <your Dropbox root directory>/MobileOrg.
+   (setq org-mobile-directory "~/Dropbox/MobileOrg")
+   ;; Set to the name of the file where new notes will be stored
+   (setq org-mobile-inbox-for-pull "~/Documents/org/mobile.org")
+#+end_src
+
+*** Local Org-mode Babel Settings
+   Configure org-mode so that when you edit source code in an indirect buffer (with C-c '), the buffer is opened in the current window. That way, your window organization isn't broken when switching.
+
+#+source: orgmode-indirect-buffer-settings
+#+begin_src emacs-lisp
+  (setq org-src-window-setup 'current-window)
+#+end_src
+
+*** Local Org-mode XeLaTeX and pdfLaTeX Export Settings
+   Configure org-mode to export directly to PDF using pdflatex or
+   xelatex, compiling the bibliography as it goes, with my preferred
+   setup in each case. There is a good deal of local stuff in this section. The required style files used below are available at https://github.com/kjhealy/latex-custom-kjh. You may need to adjust or remove some of these settings depending on your
+   preferences and local configuration.
+
+#+name: orgmode-xelatex-export
+#+begin_src emacs-lisp
+  (require 'org-latex)
+  ;; Choose either listings or minted for exporting source code blocks.
+  ;; Using minted (as here) requires pygments be installed. To use the
+  ;; default listings package instead, use
+  ;; (setq org-export-latex-listings t)
+  ;; and change references to "minted" below to "listings"
+  (setq org-export-latex-listings 'minted)
+
+  ;; default settings for minted code blocks
+  (setq org-export-latex-minted-options
+        '(;("frame" "single")
+          ("bgcolor" "bg") ; bg will need to be defined in the preamble of your document. It's defined in org-preamble-pdflatex.sty and org-preamble-xelatex.sty below.
+          ("fontsize" "\\small")
+          ))
+
+
+  (unless (boundp 'org-export-latex-classes)
+    (setq org-export-latex-classes nil))
+
+
+  ;; Originally taken from Bruno Tavernier: http://thread.gmane.org/gmane.emacs.orgmode/31150/focus=31432
+  ;; but adapted to use latexmk 4.22 or higher.
+  (defun my-auto-tex-cmd ()
+    "When exporting from .org with latex, automatically run latex,
+                                  pdflatex, or xelatex as appropriate, using latexmk."
+    (let ((texcmd)))
+    ;; default command: pdflatex
+    (setq texcmd "latexmk -pdflatex='pdflatex --shell-escape' -pdf %f")
+    ;; pdflatex -> .pdf
+    (if (string-match "LATEX_CMD: pdflatex" (buffer-string))
+        (setq texcmd "latexmk -pdflatex='pdflatex --shell-escape' -pdf %f"))
+    ;; xelatex -> .pdf
+    (if (string-match "LATEX_CMD: xelatex" (buffer-string))
+        (setq texcmd "latexmk -pdflatex='xelatex --shell-escape' -pdf %f"))
+    ;; LaTeX compilation command
+    (setq org-latex-to-pdf-process (list texcmd)))
+
+  (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-cmd)
+
+  ;; Default packages included in /every/ tex file, latex, pdflatex or xelatex
+  (setq org-export-latex-packages-alist
+        '(("" "graphicx" t)
+          ("" "longtable" nil)
+          ("" "float" nil)))
+  ;; Custom packages
+  ;; Custom packages
+  (defun my-auto-tex-parameters ()
+    "Automatically select the tex packages to include. See https://github.com/kjhealy/latex-custom-kjh for the support files included here."
+    ;; default packages for ordinary latex or pdflatex export
+    (setq org-export-latex-default-packages-alist
+          '(("AUTO" "inputenc" t)))
+    ;; Packages to include when xelatex is used
+    (if (string-match "LATEX_CMD: xelatex" (buffer-string))
+        (setq org-export-latex-default-packages-alist
+              '(("" "geometry" nil)
+                )))
+
+    (if (string-match "LATEX_CMD: pdflatex" (buffer-string))
+        (setq org-export-latex-classes
+              (cons '("article"
+                      "\\documentclass[11pt,article,oneside]{memoir}
+            \\usepackage[minted,minion]{org-preamble-pdflatex}
+            \\input{vc} % vc package"
+                      ("\\section{%s}" . "\\*section{%s}")
+                      ("\\subsection{%s}" . "\\*subsection{%s}")
+                      ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                      ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                      ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+                    org-export-latex-classes)))
+
+    (if (string-match "LATEX_CMD: xelatex" (buffer-string))
+        (setq org-export-latex-classes
+              (cons '("article"
+                      "\\documentclass[11pt,article,oneside]{memoir}
+      [PACKAGES]
+      [DEFAULT-PACKAGES]
+      \\usepackage[minted,memoir]{org-preamble-xelatex}
+      \\counterwithout{section}{chapter}
+      \\geometry{a4paper, textwidth=7in, textheight=10in, marginparsep=7pt, marginparwidth=.6in}
+      \\let\\itemize\\compactitem
+      \\let\\description\\compactdesc
+      \\let\\enumerate\\compactenum
+      \\let\\enumerate\\inparaenum
+      \\defaultfontfeatures{Mapping=tex-text}
+      \\setromanfont{Gentium}
+      \\setromanfont [BoldFont={Gentium Basic Bold},
+                     ItalicFont={Gentium Basic Italic}]{Gentium Basic}
+      \\setsansfont{Charis SIL}
+      \\setmonofont[Scale=0.8]{Anonymous}
+      \\setmainhangulfont{MalgunGothic}"
+                      ("\\section{%s}" . "\\section*{%s}")
+                      ("\\subsection{%s}" . "\\subsection*{%s}")
+                      ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                      ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                      ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+                    org-export-latex-classes
+                    ))
+      ))
+
+
+  (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-parameters)
+
+#+end_src
+
+*** Local Org-mode HTML export Settings
+Create =html= files form the =org= sources, to help with documentation. To set up org-mode for publishing projects to HTML you will need to change these settings, as they apply only to the Starter Kit.
+
+#+source: html-export-settings
+#+begin_src emacs-lisp
+  (setq org-publish-project-alist
+         '(("org"
+            :base-directory "~/.emacs.d/"
+            :publishing-directory "~/Documents/websites/kjhhome/esk/"
+            :auto-sitemap t
+            :sitemap-filename "index.org"
+            :sitemap-title "Emacs Starter Kit for the Social Sciences: Documentation"
+            :section-numbers t
+            :table-of-contents nil
+            :style "<link rel=\"stylesheet\"
+                   href=\"http://kieranhealy.org/css/blueprint/org-screen.css\"
+                   type=\"text/css\"/>")))
+
+;;   (setq org-export-html-style-extra "<link rel=\"stylesheet\" href=\"http://kieranhealy.org/css/kjh-org-custom.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"http://kieranhealy.org/css/blueprint/print.css\" type=\"text/css\" media=\"print\"> <!--[if IE]><link rel=\"stylesheet\" href=\"http://kieranhealy.org/css/blueprint/ie.css\" type=\"text/css\" media=\"screen,projection\"><![endif]-->")
+    (setq org-export-html-style-extra "<link rel=\"stylesheet\" href=\"./style.css\" type=\"text/css\"/><link rel=\"stylesheet\" href=\"http://kieranhealy.org/css/blueprint/print.css\" type=\"text/css\" media=\"print\"/>")
+
+#+end_src
+
+*** Local Org-mode ToDo keyword Settings
+#+source: orgmode-todo-keyword
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+        (quote ((sequence "TODO(t)" "NEXT(n)" "STARTED(s)" "DELEGATED(D)" "|" "DONE(d!/!)")
+                (sequence "WAITING(w@/!)" "SOMEDAY(S!)" "|" "CANCELLED(c@/!)" "PHONE")
+                (sequence "OPEN(O!)" "|" "CLOSED(C!)"))))
+
+  (setq org-todo-keyword-faces
+        (quote (("TODO" :foreground "red" :weight bold)
+                ("NEXT" :foreground "skyblue" :weight bold)
+                ("STARTED" :foreground "skyblue" :weight bold)
+                ("DELEGATED" :foreground "magenta" :weight bold)
+                ("DONE" :foreground "forest green" :weight bold)
+                ("WAITING" :foreground "orange" :weight bold)
+                ("SOMEDAY" :foreground "magenta" :weight bold)
+                ("CANCELLED" :foreground "forest green" :weight bold)
+                ("OPEN" :foreground "blue" :weight bold)
+                ("CLOSED" :foreground "forest green" :weight bold)
+                ("PHONE" :foreground "forest green" :weight bold))))
+#+end_src
+*** Local Org-mode Seeting from doc.norang.ca
+
+#+source: org-model-norang-no-show-children-task
+#+begin_src emacs-lisp
+(setq org-tags-match-list-sublevels nil)
+#+end_src
+
+#+source: org-mode-norang-project
+#+begin_src emacs-lisp
+
+(setq org-stuck-projects (quote ("" nil nil "")))
+
+(defun bh/is-project-p ()
+  "Any task with a todo keyword subtask"
+  (let ((has-subtask)
+        (subtree-end (save-excursion (org-end-of-subtree t)))
+        (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+    (save-excursion
+      (forward-line 1)
+      (while (and (not has-subtask)
+                  (< (point) subtree-end)
+                  (re-search-forward "^\*+ " subtree-end t))
+        (when (member (org-get-todo-state) org-todo-keywords-1)
+          (setq has-subtask t))))
+    (and is-a-task has-subtask)))
+
+(defun bh/skip-non-stuck-projects ()
+  "Skip trees that are not stuck projects"
+  (let* ((next-headline (save-excursion (or (outline-next-heading) (point-max))))
+         (subtree-end (save-excursion (org-end-of-subtree t)))
+         (has-next (save-excursion
+                     (forward-line 1)
+                     (and (< (point) subtree-end)
+                          (re-search-forward "^\\*+ \\(NEXT\\|STARTED\\) " subtree-end t)))))
+    (if (and (bh/is-project-p) (not has-next))
+        nil ; a stuck project, has subtasks but no next task
+      next-headline)))
+
+(defun bh/skip-non-projects ()
+  "Skip trees that are not projects"
+  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+    (if (bh/is-project-p)
+        nil
+      subtree-end)))
+
+(defun bh/skip-project-trees-and-habits ()
+  "Skip trees that are projects"
+  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+    (cond
+     ((bh/is-project-p)
+      subtree-end)
+     ((org-is-habit-p)
+      subtree-end)
+     (t
+      nil))))
+
+(defun bh/skip-projects ()
+  "Skip trees that are projects"
+  (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+    (cond
+     ((bh/is-project-p)
+      next-headline)
+     (t
+      nil))))
+
+(defun bh/skip-project-trees-and-habits ()
+  "Skip trees that are projects"
+  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+    (cond
+     ((bh/is-project-p)
+      subtree-end)
+     ((org-is-habit-p)
+      subtree-end)
+     (t
+      nil))))
+#+end_src
+
+#+source: org-mode-norang-archive
+#+begin_src emacs-lisp
+
+(setq org-archive-mark-done nil)
+(setq org-archive-location "%s_archive::* Archived Tasks")
+
+(defun bh/skip-non-archivable-tasks ()
+  "Skip trees that are not available for archiving"
+  (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+    ;; Consider only tasks with done todo headings as archivable candidates
+    (if (member (org-get-todo-state) org-done-keywords)
+        (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+               (daynr (string-to-int (format-time-string "%d" (current-time))))
+               (a-month-ago (* 60 60 24 (+ daynr 1)))
+               (last-month (format-time-string "%Y-%m-" (time-subtract (current-time) (seconds-to-time a-month-ago))))
+               (this-month (format-time-string "%Y-%m-" (current-time)))
+               (subtree-is-current (save-excursion
+                                     (forward-line 1)
+                                     (and (< (point) subtree-end)
+                                          (re-search-forward (concat last-month "\\|" this-month) subtree-end t)))))
+          (if subtree-is-current
+              next-headline ; Has a date in this month or last month, skip it
+            nil))  ; available to archive
+      (or next-headline (point-max)))))
+#+end_src
+
+
+#+source: org-mode-norang-agenda-view
+#+begin_src emacs-lisp
+
+  ;; default one day
+  (setq org-agenda-ndays 1)
+
+  ;; Do not dim blocked tasks
+  (setq org-agenda-dim-blocked-tasks nil)
+
+  ;; Custom agenda command definitions
+  (setq org-agenda-custom-commands
+        (quote (("N" "Notes" tags "NOTE"
+                 ((org-agenda-overriding-header "Notes")
+                  (org-tags-match-list-sublevels t)))
+                ("h" "Habits" tags-todo "STYLE=\"habit\""
+                 ((org-agenda-overriding-header "Habits")
+                  (org-agenda-sorting-strategy
+                   '(todo-state-down effort-up category-keep))))
+                (" " "Agenda"
+                 ((agenda "" nil)
+                  (tags "REFILE"
+                        ((org-agenda-overriding-header "Notes and Tasks to Refile")
+                         (org-agenda-overriding-header "Tasks to Refile")))
+                  (tags-todo "-WAITING-CANCELLED/!NEXT|STARTED"
+                             ((org-agenda-overriding-header "Next Tasks")
+                              (org-agenda-skip-function 'bh/skip-projects)
+                              (org-tags-match-list-sublevels 'indented)
+                              (org-agenda-todo-ignore-scheduled t)
+                              (org-agenda-todo-ignore-deadlines t)
+                              (org-tags-match-list-sublevels t)
+                              (org-agenda-sorting-strategy
+                               '(todo-state-down effort-up category-keep))))
+                  (tags-todo "-CANCELLED/!"
+                             ((org-agenda-overriding-header "Stuck Projects")
+                              (org-tags-match-list-sublevels 'indented)
+                              (org-agenda-skip-function 'bh/skip-non-stuck-projects)))
+                  (tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
+                             ((org-agenda-overriding-header "Relevant Tasks")
+                              (org-agenda-skip-function 'bh/skip-non-relevant-tasks)
+                              (org-tags-match-list-sublevels 'indented)
+                              (org-agenda-todo-ignore-scheduled t)
+                              (org-agenda-todo-ignore-deadlines t)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))))
+                  (tags-todo "-CANCELLED/!"
+                             ((org-agenda-overriding-header "Projects")
+                              (org-agenda-skip-function 'bh/skip-non-projects)
+                              (org-tags-match-list-sublevels 'indented)
+                              (org-agenda-todo-ignore-scheduled 'future)
+                              (org-agenda-todo-ignore-deadlines 'future)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))))
+                  (todo "WAITING|SOMEDAY"
+                        ((org-agenda-overriding-header "Waiting and Postponed tasks")
+                         (org-agenda-skip-function 'bh/skip-projects)))
+                  ;; (tags "-REFILE/"
+                  ;;       ((org-agenda-overriding-header "Tasks to Archive")
+                  ;;        (org-agenda-skip-function 'bh/skip-non-archivable-tasks)))
+                  )
+                 nil)
+                ("r" "Tasks to Refile" tags "REFILE"
+                 ((org-agenda-overriding-header "Notes and Tasks to Refile")
+                  (org-agenda-overriding-header "Tasks to Refile")))
+                ("#" "Stuck Projects" tags-todo "-CANCELLED/!"
+                 ((org-agenda-overriding-header "Stuck Projects")
+                  (org-tags-match-list-sublevels 'indented)
+                  (org-agenda-skip-function 'bh/skip-non-stuck-projects)))
+                ("n" "Next Tasks" tags-todo "-WAITING-CANCELLED/!NEXT|STARTED"
+                 ((org-agenda-overriding-header "Next Tasks")
+                  (org-agenda-skip-function 'bh/skip-projects)
+                  (org-tags-match-list-sublevels t)
+                  (org-agenda-sorting-strategy
+                   '(todo-state-down effort-up category-keep))))
+                ("R" "Relevant Tasks" tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
+                 ((org-agenda-overriding-header "Relevant Tasks")
+                  (org-agenda-skip-function 'bh/skip-non-relevant-tasks)
+                  (org-tags-match-list-sublevels 'indented)
+                  (org-agenda-sorting-strategy
+                   '(category-keep))))
+                ("p" "Projects" tags-todo "-CANCELLED/!"
+                 ((org-agenda-overriding-header "Projects")
+                  (org-agenda-skip-function 'bh/skip-non-projects)
+                  (org-tags-match-list-sublevels 'indented)
+                  (org-agenda-todo-ignore-scheduled 'future)
+                  (org-agenda-todo-ignore-deadlines 'future)
+                  (org-agenda-sorting-strategy
+                   '(category-keep))))
+                ("w" "Waiting Tasks" todo "WAITING|SOMEDAY"
+                 ((org-agenda-overriding-header "Waiting and Postponed tasks"))
+                 (org-agenda-skip-function 'bh/skip-projects))
+                ("A" "Tasks to Archive" tags "-REFILE/"
+                 ((org-agenda-overriding-header "Tasks to Archive")
+                  (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))))
+#+end_src
+
+
+#+source: org-mode-norang-propagate-started
+#+begin_src emacs-lisp
+;; Mark parent tasks as started
+(defvar bh/mark-parent-tasks-started nil)
+
+(defun bh/mark-parent-tasks-started ()
+  "Visit each parent task and change TODO states to STARTED"
+  (unless bh/mark-parent-tasks-started
+    (when (equal state "STARTED")
+      (let ((bh/mark-parent-tasks-started t))
+        (save-excursion
+          (while (org-up-heading-safe)
+            (when (member (nth 2 (org-heading-components)) (list "TODO" "NEXT"))
+              (org-todo "STARTED"))))))))
+
+(add-hook 'org-after-todo-state-change-hook 'bh/mark-parent-tasks-started 'append)
+#+end_src
+
+#+source: org-mode-norang-reuse-window-for-agenda
+#+begin_src emacs-lisp
+  ; Overwrite the current window with the agenda
+  (setq org-agenda-window-setup 'current-window)
+#+end_src
+
+*** Set Adium Status When clock in/out
+
+#+source: set-adium-status
+#+begin_src emacs-lisp
+  (defun set-adium-status (status)
+    (do-applescript
+     (format "
+  on do_menu(app_name, menu_name, menu_item)
+          try
+                  -- bring the target application to the front
+                  tell application app_name
+                          activate
+                  end tell
+                  tell application \"System Events\"
+                          tell process app_name
+                                  tell menu bar 1
+                                          tell menu bar item menu_name
+                                                  tell menu menu_name
+                                                          click menu item menu_item
+                                                  end tell
+                                          end tell
+                                  end tell
+                          end tell
+                  end tell
+                  return true
+          on error error_message
+                  return false
+          end try
+  end do_menu
+
+  do_menu(\"Adium\",\"Status\",\"%s\")
+  tell application \"Emacs\" to activate
+  " status))
+    )
+#+end_src
+
+#+source: org-mode-clock-hooks
+#+begin_src emacs-lisp
+  (defun adium-set-busy ()
+    (interactive)
+    (set-adium-status "Busy")
+    )
+
+  (defun adium-set-available ()
+    (interactive)
+    (set-adium-status "Available")
+    )
+
+  (add-hook 'org-clock-in-hook 'adium-set-busy)
+  (add-hook 'org-clock-out-hook 'adium-set-available)
+  (add-hook 'org-clock-cancel-hook 'adium-set-available)
+
+#+end_src
+
+** Local iBuffer Settings
+   Manage a lot of buffers easily with C-x C-b. Already set up
+   elsewhere in the starter kit. Add local configuration here, e.g.,
+   display categories.
+#+srcname: iBuffer-custom
+#+begin_src emacs-lisp
+  (setq ibuffer-saved-filter-groups
+      '(("home"
+	 ("emacs-config" (or (filename . ".emacs.d")
+			     (filename . "emacs-config")))
+	 ("Org" (or (mode . org-mode)
+		    (filename . "OrgMode")))
+	 ("Web Dev" (or (mode . html-mode)
+			(mode . css-mode)))
+	 ("Magit" (name . "\*magit"))
+	 ("ESS" (mode . ess-mode))
+         ("LaTeX" (mode . latex-mode))
+	 ("Help" (or (name . "\*Help\*")
+		     (name . "\*Apropos\*")
+		     (name . "\*info\*"))))))
+
+        (add-hook 'ibuffer-mode-hook
+	             '(lambda ()
+	             (ibuffer-switch-to-saved-filter-groups "home")))
+       (setq ibuffer-show-empty-filter-groups nil)
+       (setq ibuffer-expert t)
+       (add-hook 'ibuffer-mode-hook
+       '(lambda ()
+       (ibuffer-auto-mode 1)
+       (ibuffer-switch-to-saved-filter-groups "home")))
+#+end_src
+
+** Final Custom elements
+Some local tweaks.
+
+#+name: final-custom
+#+begin_src emacs-lisp
+
+  ;; auto revert
+  (global-auto-revert-mode t)
+
+  ;;input method
+  ;; set input-method toggle key
+  (global-set-key (kbd "S-SPC") 'toggle-input-method)
+  ;;(set-input-method "korean-hangul")
+
+  ;; start eshell with name
+  (defun neshell (name)
+    "Create an eshell buffer with a specified name"
+    (interactive "sName: ")
+    (setq name (concat "$" name))
+    (eshell)
+    (rename-buffer name))
+
+  ;; make buffer name unique
+  ;; from emacs-FY
+  ;;(require 'uniquify)
+  ;;(setq
+  ;; uniquify-buffer-name-style 'post-forward
+  ;; uniquify-separator ":")
+
+
+  ;; open the current buffer using external programs
+  (defun open-external ()
+    "open the current buffer using external programs"
+    (interactive)
+    (shell-command
+     (format "open %s"
+             (shell-quote-argument (buffer-file-name)))))
+  (global-set-key (kbd "A-1") 'open-external)
+
+  ;; open the current buffer's directory using Finder
+  (defun open-finder ()
+    "open the current buffer's directory using Finder"
+    (interactive)
+    (shell-command
+     (format "open %s"
+             (shell-quote-argument (file-name-directory (buffer-file-name))))))
+  (global-set-key (kbd "A-2") 'open-finder)
+
+  ;; itunes now playing
+  ;; from - emacswiki / NowPlaying
+  (defun _itunes-now-playing ()
+    (do-applescript
+     "tell application \"iTunes\"
+               set currentTrack to the current track
+               set artist_name to the artist of currentTrack
+               set song_title to the name of currentTrack
+               set album_title to the album of currentTrack
+               return \"[\" & album_title & \"]\" & artist_name & \" - \" & song_title
+            end tell"))
+
+  (defun _itunes-next-track ()
+    (do-applescript
+     "tell application \"iTunes\"
+           play next track
+        end tell"))
+
+  (defun _itunes-prev-track ()
+    (do-applescript
+     "tell application \"iTunes\"
+          play previous track
+        end tell"))
+
+  (defun _itunes-playpause ()
+    (do-applescript
+     "tell application \"iTunes\"
+          playpause
+        end tell"))
+
+  (defun itunes-now-playing ()
+    ""
+    (interactive)
+    (let ((name (_itunes-now-playing)))
+      (message (format "%s" name))))
+
+  (defun itunes-next-track ()
+    ""
+    (interactive)
+    (_itunes-next-track)
+    (let ((name (_itunes-now-playing)))
+      (message (format "%s" name))))
+
+  (defun itunes-prev-track ()
+    ""
+    (interactive)
+    (_itunes-prev-track)
+    (let ((name (_itunes-now-playing)))
+      (message (format "%s" name))))
+
+  (defun itunes-playpause ()
+    ""
+    (interactive)
+    (_itunes-playpause)
+    (let ((name (_itunes-now-playing)))
+      (message (format "%s" name))))
+
+  (global-set-key (kbd "A-8") 'itunes-prev-track)
+  (global-set-key (kbd "A-9") 'itunes-playpause)
+  (global-set-key (kbd "A-0") 'itunes-next-track)
+  (global-set-key (kbd "C-`") 'itunes-now-playing)
+
+  ;; use 'open' in dired mode
+  (add-hook 'dired-mode-hook
+            '(lambda ()
+               (define-key dired-mode-map "o" 'dired-open-mac)))
+
+  (defun dired-open-mac ()
+    (interactive)
+    (let ((file-name (dired-get-file-for-visit)))
+      (if (file-exists-p file-name)
+          (call-process "/usr/bin/open" nil 0 nil file-name))))
+
+  (defun transparency-set-initial-value ()
+    "Set initial value of alpha parameter for the current frame"
+    (interactive)
+    (if (equal (frame-parameter nil 'alpha) nil)
+        (set-frame-parameter nil 'alpha 100)))
+
+
+  ;; add transparency to frame
+  (defun transparency-set-value (numb)
+    "Set level of transparency for the current frame"
+    (interactive "nEnter transparency level in range 0-100: ")
+    (if (> numb 100)
+        (message "Error! The maximum value for transparency is 100!")
+      (if (< numb 0)
+          (message "Error! The minimum value for transparency is 0!")
+        (set-frame-parameter nil 'alpha numb))))
+
+  (defun transparency-increase ()
+    "Increase level of transparency for the current frame"
+    (interactive)
+    (transparency-set-initial-value)
+    (if (> (frame-parameter nil 'alpha) 0)
+        (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) -2))
+      (message "This is a minimum value of transparency!")))
+
+  (defun transparency-decrease ()
+    "Decrease level of transparency for the current frame"
+    (interactive)
+    (transparency-set-initial-value)
+    (if (< (frame-parameter nil 'alpha) 100)
+        (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) +2))
+      (message "This is a minimum value of transparency!")))
+
+  ;; sample keybinding for transparency manipulation
+  (global-set-key (kbd "C-?") 'transparency-set-value)
+  ;; the two below let for smooth transparency control
+  (global-set-key (kbd "C->") 'transparency-increase)
+  (global-set-key (kbd "C-<") 'transparency-decrease)
+
+  ;; Line-spacing tweak (Optimized for PragmataPro)
+  (setq-default line-spacing 5)
+
+  ;; minimize fringe
+  (setq-default indicate-empty-lines nil)
+
+  ;; Add keybindings for commenting regions of text
+  (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
+  (global-set-key (kbd "M-'") 'comment-or-uncomment-region)
+
+  ;; Base dir
+  (cd "~/")
+
+  ;; show trailing white space
+  (setq show-trailing-whitespace t)
+
+  ;; custom variables kludge. Why can't I get these to work via setq?
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(LaTeX-XeTeX-command "xelatex -synctex=1")
+   '(TeX-engine (quote xetex))
+   '(TeX-view-program-list (quote (("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b"))))
+   '(TeX-view-program-selection (quote (((output-dvi style-pstricks) "dvips and gv") (output-dvi "xdvi") (output-pdf "Skim") (output-html "xdg-open"))))
+   '(show-paren-mode t)
+   '(blink-cursor-mode nil)
+   '(text-mode-hook (quote (text-mode-hook-identify)))
+   )
+
+#+end_src

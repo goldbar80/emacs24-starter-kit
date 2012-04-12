@@ -199,6 +199,11 @@ generally useful please submit it to the starter kit core!
 - [[file:starter-kit-python.org][python]]
 - [[file:starter-kit-ruby.org][ruby]]
 
+These packages are added by goldbar (borrowed from Kieran Healy's
+emacs starter kit fork)
+- [[file:starter-kit-elpa.org][elpa]]
+- [[file:starter-kit-latex.org][latex]]
+
 ** Emacs Lisp Package Archive
    :PROPERTIES:
    :CUSTOM_ID: emacs-lisp-package-archive
@@ -257,24 +262,6 @@ interested in the actual code implementing the starter kit.
     (require 'recentf)
   #+end_src
 
-- ELPA archive repositories and two packages to install by default.
-  #+begin_src emacs-lisp
-    (setq package-archives
-          '(("original"    . "http://tromey.com/elpa/")
-            ("gnu"         . "http://elpa.gnu.org/packages/")
-            ("marmalade"   . "http://marmalade-repo.org/packages/")))
-    (package-initialize)
-    
-    (defvar starter-kit-packages
-      (list 'yasnippet-bundle)
-      "Libraries that should be installed by default.")
-    
-    (unless package-archive-contents
-      (package-refresh-contents))
-    (dolist (package starter-kit-packages)
-      (unless (package-installed-p package)
-        (package-install package)))
-  #+end_src
 
 - Functions for loading other parts of the starter kit
   #+name: starter-kit-load
@@ -344,6 +331,13 @@ The following files contain the remainder of the core of the Emacs
 Starter Kit.  All of the code in this section should be loaded by
 everyone using the starter kit.
 
+- ELPA archive repositories and two packages to install by
+  default. (by goldbar)
+  #+begin_src emacs-lisp
+    (starter-kit-load "elpa")
+  #+end_src
+
+
 - Starter kit function definitions in [[file:starter-kit-defuns.org][starter-kit-defuns]]
   #+begin_src emacs-lisp
   (starter-kit-load "starter-kit-defuns.org")
@@ -400,6 +394,18 @@ everyone using the starter kit.
     (add-hook 'org-mode-hook #'yas/org-setup)
   #+end_src
 
+** Optional starter kits
+- org mode
+  #+name: starter kit org
+  #+begin_src emacs-lisp
+    (starter-kit-load "org")    
+  #+end_src
+
+- latex mode
+  #+name: starter kit latex
+  #+begin_src emacs-lisp
+    (starter-kit-load "latex")    
+  #+end_src
 ** Load User/System Specific Files
 *** System/User specific customizations
 You can keep system- or user-specific customizations here in either
@@ -429,9 +435,12 @@ After we've loaded all the Starter Kit defaults, lets load the User's stuff.
            (string-match "\\(.*?\\)\.\\(org\\(\\.el\\)?\\|el\\)\\(\\.gpg\\)?$" name)
            (match-string 1 name)))
     (let ((elisp-dir (expand-file-name "src" starter-kit-dir))
+          (submodule-dir (expand-file-name "submodules" starter-kit-dir)) ;; by goldbar
           (user-dir (expand-file-name user-login-name starter-kit-dir)))
       ;; add the src directory to the load path
       (add-to-list 'load-path elisp-dir)
+      ;; add the submodule directory to the load path ;; by goldbar
+      (add-to-list 'load-path submodule-dir)
       ;; load specific files
       (when (file-exists-p elisp-dir)
         (let ((default-directory elisp-dir))

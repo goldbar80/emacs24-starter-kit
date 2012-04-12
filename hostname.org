@@ -1,0 +1,43 @@
+* Host Specific Customization
+*** Add System Paths
+#+name: add-system-path
+#+begin_src emacs-lisp
+  (setenv "PATH" (concat "/Users/goldbar/local/bin:" (concat "/usr/texbin:" (concat "/usr/local/bin:" (concat "/usr/local/sbin" (concat "/usr/X11/bin:" (getenv "PATH")))))))
+#+end_src
+
+*** Add Exec Paths
+#+name: add-exec-path
+#+begin_src emacs-lisp
+  (setq exec-path (append '("/Users/goldbar/local/bin") exec-path))
+  (setq exec-path (append '("/usr/local/bin") exec-path))
+  (setq exec-path (append '("/usr/local/sbin") exec-path))
+  (setq exec-path (append '("/usr/texbin") exec-path))
+  (setq exec-path (append '("/usr/X11/bin") exec-path))
+#+end_src
+
+*** Set Language Environment
+#+name: set-lang-env
+#+begin_src emacs-lisp
+  (setenv "LANG" "en_US.UTF-8")
+#+end_src
+
+*** Font setting
+#+name: goldbar-font-setting
+#+begin_src emacs-lisp
+  ;; (cond
+  ;;  ((eq window-system nil) nil)
+  ;;  ((font-existsp "DejaVu Sans Mono")
+  ;;   (set-face-attribute 'default nil :height 120 :font "DejaVu Sans Mono"))
+  ;;  ((font-existsp "Consolas")
+  ;;   (set-face-attribute 'default nil :height 120 :font "Consolas"))
+  ;;  )
+
+  (let ((fontset "fontset-default"))
+    (set-fontset-font fontset 'latin
+                      '("DejaVu Sans Mono" . "unicode-bmp"))
+    (set-fontset-font fontset 'hangul
+                      '("NanumGothicCoding" . "unicode-bmp"))
+    (set-face-attribute 'default nil
+                        :font fontset
+                        :height 125))
+#+end_src
