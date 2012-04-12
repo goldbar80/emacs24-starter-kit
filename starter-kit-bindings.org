@@ -107,3 +107,20 @@ Rgrep is infinitely useful in multi-file projects.
 #+begin_src emacs-lisp
   (define-key global-map "\C-x\C-r" 'rgrep)
 #+end_src
+** Smex replaces M-x
+    Smex replaces M-x, and is built on top of ido-mode. See
+    http://github.com/nonsequitur/smex or
+    http://www.emacswiki.org/emacs/Smex for details.  
+#+srcname: smex
+#+begin_src emacs-lisp
+  (require 'smex)
+  (smex-initialize)  
+  (global-set-key (kbd "M-x") 'smex)
+  (global-set-key (kbd "C-x C-m") 'smex) ;; supersedes binding in starter-kit-bindings.org
+  (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+  (global-set-key (kbd "C-x C-M") 'smex-major-mode-commands)
+  ;; This is your old M-x.
+  (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
+  (setq smex-show-unbound-commands t)
+  (smex-auto-update 30)
+#+end_src
