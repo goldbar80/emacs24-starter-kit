@@ -10,9 +10,6 @@
 [submodule "submodules/matlab-emacs"]
 	path = submodules/matlab-emacs
 	url = git://github.com/ruediger/matlab-emacs.git
-[submodule "submodules/psvn"]
-	path = submodules/psvn
-	url = git://github.com/emacsmirror/psvn.git
 [submodule "submodules/emacs-w3m"]
 	path = submodules/emacs-w3m
 	url = git://github.com/emacsmirror/w3m.git
