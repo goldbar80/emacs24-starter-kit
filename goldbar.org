@@ -697,13 +697,11 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+begin_src emacs-lisp
   (require 'psvn)
 #+end_src
-
 ** Git-emacs
 #+name: git-emacs
 #+begin_src emacs-lisp
   (require 'git-emacs)
 #+end_src
-
 ** Emacs w3m
 #+name: emacs w3m
 #+begin_src emacs-lisp
