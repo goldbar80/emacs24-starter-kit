@@ -16,3 +16,6 @@
 [submodule "submodules/git-emacs"]
 	path = submodules/git-emacs
 	url = git://github.com/tsgates/git-emacs.git
+[submodule "submodules/psvn"]
+	path = submodules/psvn
+	url = git://github.com/emacsmirror/psvn.git
