@@ -4,7 +4,7 @@
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path (expand-file-name "color-theme-solarized" (expand-file-name "submodules" starter-kit-dir)))
   (if window-system
-      (load-theme 'solarized-dark t)
+      (load-theme 'solarized-light t)
     (load-theme 'tangosoft t) ;; Emacs started in tty
     )
 #+end_src
@@ -698,6 +698,17 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (require 'psvn)
 #+end_src
 
+** Git-emacs
+#+name: git-emacs
+#+begin_src emacs-lisp
+  (require 'git-emacs)
+#+end_src
+
+** Emacs w3m
+#+name: emacs w3m
+#+begin_src emacs-lisp
+  (require 'w3m-load)
+#+end_src
 ** Final Custom elements
 Some local tweaks.
 
