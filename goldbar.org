@@ -141,6 +141,23 @@ Tell RefTeX where the bibliography files are.
 #+end_src
 
 ** Local Org-mode Settings
+*** Babel Setting
+#+name: org-babel-lang-set
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '(
+     (sh . t)
+     (python . t)
+     (ruby . t)
+     (ditaa . t)
+     (dot . t)
+     (perl . t)
+     (latex . t)
+     ))
+  
+#+end_src
+
 *** Setting file for agenda
 #+name: orgmode agenda
 #+begin_src emacs-lisp
