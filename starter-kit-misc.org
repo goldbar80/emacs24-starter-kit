@@ -139,6 +139,10 @@ it's possible aspell isn't in your path
             ("english" ,@default))))
 #+end_src
 
+#+begin_src emacs-lisp
+  (setq ispell-program-name "aspell")
+#+end_src
+
 ** Hippie expand: at times perhaps too hip
 #+begin_src emacs-lisp
 (delete 'try-expand-line hippie-expand-try-functions-list)
