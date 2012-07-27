@@ -16,3 +16,6 @@
 [submodule "submodules/psvn"]
 	path = submodules/psvn
 	url = git://github.com/emacsmirror/psvn.git
+[submodule "submodules/emacs-calfw"]
+	path = submodules/emacs-calfw
+	url = git://github.com/kiwanami/emacs-calfw.git
