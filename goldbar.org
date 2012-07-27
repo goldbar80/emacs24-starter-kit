@@ -7,8 +7,8 @@
       (load-theme 'solarized-light t)
     (load-theme 'tangosoft t) ;; Emacs started in tty
     )
+  
 #+end_src
-
 ** Full screen
 #+name: full screen
 #+begin_src emacs-lisp
@@ -136,7 +136,7 @@ Tell RefTeX where the bibliography files are.
 #+end_src
 *** Add flyspell mode hook
 #+srcname: auctex-flyspell
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (add-hook 'LaTeX-mode-hook 'turn-on-flyspell)
 #+end_src
 
@@ -155,7 +155,7 @@ Tell RefTeX where the bibliography files are.
      (perl . t)
      (latex . t)
      ))
-  
+
 #+end_src
 
 *** Setting file for agenda
@@ -169,7 +169,7 @@ Tell RefTeX where the bibliography files are.
   ;;(setq org-mobile-directory "~/Dropbox/MobileOrg")
   ;; Set to the name of the file where new notes will be stored
   ;;(setq org-mobile-inbox-for-pull "~/Documents/org/mobile.org")
-  
+
 #+end_src
 *** Local Org-mode Smart-quote binding
 When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by default.
@@ -223,14 +223,14 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
 
 #+source: orgmode-xelatex-export
 #+begin_src emacs-lisp
-  (require 'org-latex)   
+  (require 'org-latex)
   ;; Choose either listings or minted for exporting source code blocks.
   ;; Using minted (as here) requires pygments be installed. To use the
   ;; default listings package instead, use
   ;; (setq org-export-latex-listings t)
   ;; and change references to "minted" below to "listings"
   (setq org-export-latex-listings 'minted)
-  
+
   ;; default settings for minted code blocks
   (setq org-export-latex-minted-options
         '(;("frame" "single")
@@ -238,12 +238,12 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
           ("fontsize" "\\small")
           ))
   ;; turn off the default toc behavior; deal with it properly in headers to files.
-  (defun org-export-latex-no-toc (depth)  
+  (defun org-export-latex-no-toc (depth)
     (when depth
       (format "%% Org-mode is exporting headings to %s levels.\n"
               depth)))
   (setq org-export-latex-format-toc-function 'org-export-latex-no-toc)
-  
+
   (add-to-list 'org-export-latex-classes
                '("memarticle"
                  "\\documentclass[11pt,oneside,article]{memoir}"
@@ -252,7 +252,7 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  
+
   (add-to-list 'org-export-latex-classes
                '("memarticle-vc"
                  "\\documentclass[11pt,oneside,article]{memoir}\n\\immediate\\write18{sh ./vc}\n\\input{vc} % vc package"
@@ -261,7 +261,7 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  
+
   (add-to-list 'org-export-latex-classes
                '("membook"
                  "\\documentclass[11pt,oneside]{memoir}"
@@ -269,7 +269,7 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-  
+
   (add-to-list 'org-export-latex-classes
                '("membook-vc"
                  "\\documentclass[11pt,oneside]{memoir}\n\\immediate\\write18{sh ./vc}\n\\input{vc} % vc package"
@@ -277,15 +277,15 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-  
+
   ;; Originally taken from Bruno Tavernier: http://thread.gmane.org/gmane.emacs.orgmode/31150/focus=31432
-  ;; but adapted to use latexmk 4.22 or higher.  
+  ;; but adapted to use latexmk 4.22 or higher.
   (defun my-auto-tex-cmd ()
     "When exporting from .org with latex, automatically run latex,
                        pdflatex, or xelatex as appropriate, using latexmk."
     (let ((texcmd)))
-    ;; default command: pdflatex 
-    (setq texcmd "latexmk -pdflatex='pdflatex --shell-escape' -pdf %f")        
+    ;; default command: pdflatex
+    (setq texcmd "latexmk -pdflatex='pdflatex --shell-escape' -pdf %f")
     ;; pdflatex -> .pdf
     (if (string-match "LATEX_CMD: pdflatex" (buffer-string))
         (setq texcmd "latexmk -pdflatex='pdflatex --shell-escape' -pdf %f"))
@@ -294,15 +294,15 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
         (setq texcmd "latexmk -pdflatex='xelatex --shell-escape' -pdf %f"))
     ;; LaTeX compilation command
     (setq org-latex-to-pdf-process (list texcmd)))
-  
+
   (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-cmd)
-  
+
   ;; Default packages included in /every/ tex file, latex, pdflatex or xelatex
   (setq org-export-latex-packages-alist
         '(("" "graphicx" t)
           ("" "longtable" nil)
           ("" "float" )))
-  
+
   ;; Custom packages
   (defun my-auto-tex-parameters ()
     "Automatically select the tex packages to include. See https://github.com/kjhealy/latex-custom-kjh for the support files included here."
@@ -313,7 +313,7 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
           ("" "float" )))
     ;; (setq org-export-latex-default-packages-alist
     ;;       '(("AUTO" "inputenc" t)
-    ;;         ("minted,minion" "org-preamble-pdflatex" t)))        
+    ;;         ("minted,minion" "org-preamble-pdflatex" t)))
     ;; Packages to include when xelatex is used
     (if (string-match "LATEX_CMD: pdflatex" (buffer-string))
         (setq org-export-latex-default-packages-alist
@@ -323,9 +323,9 @@ When in an org-mode buffer, bind TeX-insert-quote to =C-c "=. Turned off by defa
     (if (string-match "LATEX_CMD: xelatex" (buffer-string))
         (setq org-export-latex-default-packages-alist
               '(("minted" "org-preamble-xelatex" t) ))))
-  
-  (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-parameters)      
-  
+
+  (add-hook 'org-export-latex-after-initial-vars-hook 'my-auto-tex-parameters)
+
 #+end_src
 
 *** Local Org-mode HTML export Settings
@@ -512,14 +512,14 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                              ((org-agenda-overriding-header "Stuck Projects")
                               (org-tags-match-list-sublevels 'indented)
                               (org-agenda-skip-function 'bh/skip-non-stuck-projects)))
-                  (tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
-                             ((org-agenda-overriding-header "Relevant Tasks")
-                              (org-agenda-skip-function 'bh/skip-non-relevant-tasks)
-                              (org-tags-match-list-sublevels 'indented)
-                              (org-agenda-todo-ignore-scheduled t)
-                              (org-agenda-todo-ignore-deadlines t)
-                              (org-agenda-sorting-strategy
-                               '(category-keep))))
+                  ;; (tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
+                  ;;            ((org-agenda-overriding-header "Relevant Tasks")
+                  ;;             (org-agenda-skip-function 'bh/skip-non-relevant-tasks)
+                  ;;             (org-tags-match-list-sublevels 'indented)
+                  ;;             (org-agenda-todo-ignore-scheduled t)
+                  ;;             (org-agenda-todo-ignore-deadlines t)
+                  ;;             (org-agenda-sorting-strategy
+                  ;;              '(category-keep))))
                   (tags-todo "-CANCELLED/!"
                              ((org-agenda-overriding-header "Projects")
                               (org-agenda-skip-function 'bh/skip-non-projects)
@@ -569,6 +569,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                 ("A" "Tasks to Archive" tags "-REFILE/"
                  ((org-agenda-overriding-header "Tasks to Archive")
                   (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))))
+
 #+end_src
 
 
@@ -650,6 +651,12 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
 #+end_src
 
+*** Add flyspell mode hook
+#+srcname: orgmode-flyspell
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook 'turn-on-flyspell)
+#+end_src
+
 ** Local iBuffer Settings
    Manage a lot of buffers easily with C-x C-b. Already set up
    elsewhere in the starter kit. Add local configuration here, e.g.,
@@ -692,7 +699,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+name: dot mode
 #+begin_src emacs-lisp
   (load "graphviz-dot-mode")
-  (set-default 'autopair-dont-activate #' (lambda () (eq major-mode 'graphviz-dot-mode))) 
+  (set-default 'autopair-dont-activate #' (lambda () (eq major-mode 'graphviz-dot-mode)))
 #+end_src
 ** Workgroups
 #+name: workgropus
@@ -702,6 +709,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (wg-load "~/.emacs.d/wg.saved")
   (setq wg-switch-on-load nil)
   (setq wg-morph-on nil)
+  (setq wg-use-faces nil)
 #+end_src
 ** Writegood mode
 #+name: writegood mode
@@ -725,6 +733,207 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+begin_src emacs-lisp
   (require 'w3m-load)
 #+end_src
+** Calfw
+#+name: calfw
+#+begin_src emacs-lisp
+  (require 'calfw)
+  (require 'calfw-org)
+  (require 'calfw-ical)
+
+  ;; First day of the week
+  (setq calendar-week-start-day 1) ; 0:Sunday, 1:Monday
+
+  (defun my-open-cfw-calendar ()
+    (interactive)
+    (cfw:open-calendar-buffer
+     :contents-sources
+     (list
+      (cfw:org-create-source "Green")
+      (cfw:ical-create-source "@DM" "https://www.google.com/calendar/ical/fhde752kgi3sbicapc6rl5311s%40group.calendar.google.com/public/basic.ics" "Orange")
+      )))
+#+end_src
+** Send Gmail setup
+#+name: send-gmail-setup
+#+begin_src emacs-lisp
+  (setq mail-host-address "gmail.com")
+  (setq user-mail-address "goldbar80@gmail.com")
+  (setq send-mail-function (quote smtpmail-send-it))
+  (setq smtpmail-smtp-server "smtp.gmail.com")
+  (setq smtpmail-smtp-service 587)
+  (setq smtpmail-auth-credentials (expand-file-name (concat starter-kit-dir ".authinfo")))
+  (setq smtpmail-starttls-credentials (quote (("smtp.gmail.com" 587 nil nil))))
+#+end_src
+
+** Gnus
+*** Read Gmail
+#+name: read-gmail-gnus
+#+begin_src emacs-lisp
+  (setq gnus-select-method '(nnimap "gmail"
+                                    (nnimap-address "imap.gmail.com")
+                                    (nnimap-server-port 993)
+                                    (nnimap-stream ssl)))
+  
+  ;; Make Gnus NOT ignore [Gmail] mailboxes
+  (setq gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
+  
+  ;; periodic update
+  ;; (gnus-demon-add-handler 'gnus-group-get-new-news 10 t)
+  ;; (gnus-demon-init)
+  
+  ;; in case of offline ... prevent emacs crash
+  ;; (defadvice gnus-demon-scan-news (around gnus-demon-timeout activate)
+  ;;   "Timeout for Gnus."
+  ;;   (with-timeout
+  ;;       (120 (message "Gnus timed out."))
+  ;;     ad-do-it))
+  
+  
+  
+#+end_src
+*** Thread View
+#+name: gnus-thread-tree
+#+begin_src emacs-lisp
+  (setq-default
+   gnus-summary-line-format "%U%R%z %(%&user-date;  %-15,15f %* %B%s%)\n"
+   gnus-user-date-format-alist '((t . "%Y-%m-%d %H:%M"))
+   gnus-summary-thread-gathering-function 'gnus-gather-threads-by-references
+   gnus-thread-sort-functions '(gnus-thread-sort-by-date)
+   gnus-sum-thread-tree-single-indent   "◎ "
+   gnus-sum-thread-tree-false-root      "  "
+   gnus-sum-thread-tree-indent          "  "
+   gnus-sum-thread-tree-leaf-with-other "├─>"
+   gnus-sum-thread-tree-root            "┌ "
+   gnus-sum-thread-tree-single-leaf     "└─>"
+   gnus-sum-thread-tree-vertical        "│")
+#+end_src
+*** Summary article sort
+#+name: gnus-summary-article-sort
+#+begin_src emacs-lisp
+  (setq gnus-article-sort-functions
+        '(gnus-article-sort-by-most-recent-date))
+#+end_src
+
+** Powerline
+#+begin_src emacs-lisp
+  ;; Powerline
+  (defun arrow-right-xpm (color1 color2)
+    "Return an XPM right arrow string representing."
+    (format "/* XPM */
+  static char * arrow_right[] = {
+  \"12 18 2 1\",
+  \". c %s\",
+  \"  c %s\",
+  \".           \",
+  \"..          \",
+  \"...         \",
+  \"....        \",
+  \".....       \",
+  \"......      \",
+  \".......     \",
+  \"........    \",
+  \".........   \",
+  \".........   \",
+  \"........    \",
+  \".......     \",
+  \"......      \",
+  \".....       \",
+  \"....        \",
+  \"...         \",
+  \"..          \",
+  \".           \"};"  color1 color2))
+  
+  (defun arrow-left-xpm (color1 color2)
+    "Return an XPM right arrow string representing."
+    (format "/* XPM */
+  static char * arrow_right[] = {
+  \"12 18 2 1\",
+  \". c %s\",
+  \"  c %s\",
+  \"           .\",
+  \"          ..\",
+  \"         ...\",
+  \"        ....\",
+  \"       .....\",
+  \"      ......\",
+  \"     .......\",
+  \"    ........\",
+  \"   .........\",
+  \"   .........\",
+  \"    ........\",
+  \"     .......\",
+  \"      ......\",
+  \"       .....\",
+  \"        ....\",
+  \"         ...\",
+  \"          ..\",
+  \"           .\"};"  color2 color1))
+  
+  (defconst color1 "#666666") ; gray40
+  (defconst color2 "#999999") ; gray60
+  
+  (defvar arrow-right-0 (create-image (arrow-right-xpm "None" color1) 'xpm t :ascent 'center))
+  (defvar arrow-right-1 (create-image (arrow-right-xpm color1 color2) 'xpm t :ascent 'center))
+  (defvar arrow-right-2 (create-image (arrow-right-xpm color2 "None") 'xpm t :ascent 'center))
+  (defvar arrow-left-1  (create-image (arrow-left-xpm color2 color1) 'xpm t :ascent 'center))
+  (defvar arrow-left-2  (create-image (arrow-left-xpm "None" color2) 'xpm t :ascent 'center))
+  
+  (display-time)
+  
+  (setq-default mode-line-format
+                (list
+                 '("%e"
+                   mode-line-mule-info
+                   mode-line-modified
+                   (wg-mode-line-on
+                    (:eval
+                     (wg-mode-line-string)))
+                   minor-mode-alist)
+                 '(:eval (concat (propertize " " 'display arrow-right-0)))
+                 '(:eval (concat (propertize " %m " 'face 'mode-line-color-1)
+                                 (propertize " " 'display arrow-right-1)))
+                 '(:eval (concat (propertize " %b " 'face 'mode-line-color-2)
+                                 (propertize " " 'display arrow-right-2)))
+                 ;; Justify right by filling with spaces to right fringe - 16
+                 ;; (16 should be computed rahter than hardcoded)
+                 '(vc-mode vc-mode)
+                 '(:eval (propertize " " 'display '((space :align-to (- right-fringe 17)))))
+                 '(:eval (concat (propertize " " 'display arrow-left-2)
+                                 (propertize " %p " 'face 'mode-line-color-2)))
+                 '(:eval (concat (propertize " " 'display arrow-left-1)
+                                 (propertize "%4l:%2c  " 'face 'mode-line-color-1)))
+                 ))
+  
+  
+  (make-face 'mode-line-color-1)
+  (set-face-attribute 'mode-line-color-1 nil
+                      :foreground "#fffacd"
+                      :bold t
+                      :background color1)
+  
+  (make-face 'mode-line-color-2)
+  (set-face-attribute 'mode-line-color-2 nil
+                      :foreground "#fffacd"
+                      :bold t
+                      :background color2)
+  
+  (set-face-attribute 'mode-line nil
+                      :foreground "#fffacd"
+                      :background "#171717"
+                      :box nil)
+  (set-face-attribute 'mode-line-inactive nil
+                      :foreground "#fffacd"
+                      :background "#171717")
+  
+#+end_src
+
+** Reload configuration!!
+#+name: reload-emacs
+#+begin_src emacs-lisp
+  (defun reload-emacs ()
+    (interactive)
+    (load-file (concat starter-kit-dir "init.el"))
+  )
+#+end_src
 ** Final Custom elements
 Some local tweaks.
 
@@ -732,7 +941,7 @@ Some local tweaks.
 #+begin_src emacs-lisp
 
   ;; auto revert
-  (global-auto-revert-mode t)
+  ;;(global-auto-revert-mode t)
 
   ;;input method
   ;; set input-method toggle key
@@ -749,10 +958,10 @@ Some local tweaks.
 
   ;; make buffer name unique
   ;; from emacs-FY
-  ;;(require 'uniquify)
-  ;;(setq
-  ;; uniquify-buffer-name-style 'post-forward
-  ;; uniquify-separator ":")
+  (require 'uniquify)
+  (setq
+   uniquify-buffer-name-style 'post-forward
+   uniquify-separator ":")
 
 
   ;; open the current buffer using external programs
