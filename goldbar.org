@@ -756,7 +756,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
 ** Psvn
 #+name: psvn
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (require 'psvn)
 #+end_src
 ** Git-emacs
@@ -766,7 +766,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+end_src
 ** Emacs w3m
 #+name: emacs w3m
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (require 'w3m-load)
 #+end_src
 ** Calfw
