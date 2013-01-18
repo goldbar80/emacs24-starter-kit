@@ -141,6 +141,7 @@ it's possible aspell isn't in your path
 
 #+begin_src emacs-lisp
   (setq ispell-program-name "aspell")
+  (setq ispell-extra-args '("--sug-mode=ultra")) ;; speed up
 #+end_src
 
 ** Hippie expand: at times perhaps too hip
