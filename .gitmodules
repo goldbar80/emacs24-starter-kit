@@ -1,21 +1,6 @@
-[submodule "submodules/color-theme-solarized"]
-	path = submodules/color-theme-solarized
-	url = git://github.com/sellout/emacs-color-theme-solarized.git
-[submodule "submodules/writegood-mode"]
-	path = submodules/writegood-mode
-	url = git://github.com/bnbeckwith/writegood-mode.git
 [submodule "submodules/matlab-emacs"]
 	path = submodules/matlab-emacs
 	url = git://github.com/ruediger/matlab-emacs.git
-[submodule "submodules/emacs-w3m"]
-	path = submodules/emacs-w3m
-	url = git://github.com/emacsmirror/w3m.git
 [submodule "submodules/git-emacs"]
 	path = submodules/git-emacs
 	url = git://github.com/tsgates/git-emacs.git
-[submodule "submodules/psvn"]
-	path = submodules/psvn
-	url = git://github.com/emacsmirror/psvn.git
-[submodule "submodules/emacs-calfw"]
-	path = submodules/emacs-calfw
-	url = git://github.com/kiwanami/emacs-calfw.git
