@@ -2,13 +2,44 @@
 ** Color theme (> Emacs 24)
 #+name: setting color theme
 #+begin_src emacs-lisp
-  (add-to-list 'custom-theme-load-path (expand-file-name "color-theme-solarized" (expand-file-name "submodules" starter-kit-dir)))
+  (add-to-list 'custom-theme-load-path (concat starter-kit-dir "submodules/color-themes"))
+  
   (if window-system
-      (load-theme 'solarized-light t)
+      (load-theme 'twilight-bright t)
     (load-theme 'tangosoft t) ;; Emacs started in tty
     )
   
 #+end_src
+** Toggle Window split
+   #+begin_src emacs-lisp
+     (defun toggle-window-split ()
+       (interactive)
+       (if (= (count-windows) 2)
+           (let* ((this-win-buffer (window-buffer))
+                  (next-win-buffer (window-buffer (next-window)))
+                  (this-win-edges (window-edges (selected-window)))
+                  (next-win-edges (window-edges (next-window)))
+                  (this-win-2nd (not (and (<= (car this-win-edges)
+                                              (car next-win-edges))
+                                          (<= (cadr this-win-edges)
+                                              (cadr next-win-edges)))))
+                  (splitter
+                   (if (= (car this-win-edges)
+                          (car (window-edges (next-window))))
+                       'split-window-horizontally
+                     'split-window-vertically)))
+             (delete-other-windows)
+             (let ((first-win (selected-window)))
+               (funcall splitter)
+               (if this-win-2nd (other-window 1))
+               (set-window-buffer (selected-window) this-win-buffer)
+               (set-window-buffer (next-window) next-win-buffer)
+               (select-window first-win)
+               (if this-win-2nd (other-window 1))))))
+     
+     (global-set-key (kbd "C-c y") 'toggle-window-split)
+   #+end_src
+   
 ** Full screen
 #+name: full screen
 #+begin_src emacs-lisp
@@ -141,6 +172,11 @@ Tell RefTeX where the bibliography files are.
 #+end_src
 
 ** Local Org-mode Settings
+*** Hide leading stars
+#+begin_src emacs-lisp
+  (setq org-hide-leading-stars t)
+#+end_src
+
 *** Babel Setting
 #+name: org-babel-lang-set
 #+begin_src emacs-lisp
@@ -478,13 +514,13 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
 #+source: org-mode-norang-agenda-view
 #+begin_src emacs-lisp
-
+  
   ;; default one day
   (setq org-agenda-ndays 1)
-
+  
   ;; Do not dim blocked tasks
   (setq org-agenda-dim-blocked-tasks nil)
-
+  
   ;; Custom agenda command definitions
   (setq org-agenda-custom-commands
         (quote (("N" "Notes" tags "NOTE"
@@ -569,7 +605,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                 ("A" "Tasks to Archive" tags "-REFILE/"
                  ((org-agenda-overriding-header "Tasks to Archive")
                   (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))))
-
+  
 #+end_src
 
 
@@ -739,10 +775,10 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (require 'calfw)
   (require 'calfw-org)
   (require 'calfw-ical)
-
+  
   ;; First day of the week
   (setq calendar-week-start-day 1) ; 0:Sunday, 1:Monday
-
+  
   (defun my-open-cfw-calendar ()
     (interactive)
     (cfw:open-calendar-buffer
@@ -814,115 +850,169 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+end_src
 
 ** Powerline
+
 #+begin_src emacs-lisp
-  ;; Powerline
-  (defun arrow-right-xpm (color1 color2)
-    "Return an XPM right arrow string representing."
-    (format "/* XPM */
-  static char * arrow_right[] = {
-  \"12 18 2 1\",
-  \". c %s\",
-  \"  c %s\",
-  \".           \",
-  \"..          \",
-  \"...         \",
-  \"....        \",
-  \".....       \",
-  \"......      \",
-  \".......     \",
-  \"........    \",
-  \".........   \",
-  \".........   \",
-  \"........    \",
-  \".......     \",
-  \"......      \",
-  \".....       \",
-  \"....        \",
-  \"...         \",
-  \"..          \",
-  \".           \"};"  color1 color2))
+  (require 'powerline)
+    
+  ;; for solarized-light
+  ;; (defface powerline-active1-g '((t (:background "#ada96e" :inherit mode-line))) 
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
   
-  (defun arrow-left-xpm (color1 color2)
-    "Return an XPM right arrow string representing."
-    (format "/* XPM */
-  static char * arrow_right[] = {
-  \"12 18 2 1\",
-  \". c %s\",
-  \"  c %s\",
-  \"           .\",
-  \"          ..\",
-  \"         ...\",
-  \"        ....\",
-  \"       .....\",
-  \"      ......\",
-  \"     .......\",
-  \"    ........\",
-  \"   .........\",
-  \"   .........\",
-  \"    ........\",
-  \"     .......\",
-  \"      ......\",
-  \"       .....\",
-  \"        ....\",
-  \"         ...\",
-  \"          ..\",
-  \"           .\"};"  color2 color1))
+  ;; (defface powerline-active2-g '((t (:background "#ede275" :inherit mode-line)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
   
-  (defconst color1 "#666666") ; gray40
-  (defconst color2 "#999999") ; gray60
+  ;; (defface powerline-inactive1-g
+  ;;   '((t (:background "#887755" :inherit mode-line-inactive)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
   
-  (defvar arrow-right-0 (create-image (arrow-right-xpm "None" color1) 'xpm t :ascent 'center))
-  (defvar arrow-right-1 (create-image (arrow-right-xpm color1 color2) 'xpm t :ascent 'center))
-  (defvar arrow-right-2 (create-image (arrow-right-xpm color2 "None") 'xpm t :ascent 'center))
-  (defvar arrow-left-1  (create-image (arrow-left-xpm color2 color1) 'xpm t :ascent 'center))
-  (defvar arrow-left-2  (create-image (arrow-left-xpm "None" color2) 'xpm t :ascent 'center))
+  ;; (defface powerline-inactive2-g
+  ;;   '((t (:background "#bbaa55" :inherit mode-line-inactive)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+    
+  ;; for tomorrow-night
+  ;; (defface powerline-active1-g '((t (:background "#585a5e" :inherit mode-line))) 
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
   
-  (display-time)
+  ;; (defface powerline-active2-g '((t (:background "#4a8e87" :inherit mode-line)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
   
+  ;; (defface powerline-inactive1-g
+  ;;   '((t (:background "#282a2e" :inherit mode-line-inactive)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+  
+  ;; (defface powerline-inactive2-g
+  ;;   '((t (:background "#373b41" :inherit mode-line-inactive)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+  
+  ;; for twilight-bright
+  (defface powerline-active1-g '((t (:background "#c9d6df" :inherit mode-line))) 
+    "Powerline face 1."
+    :group 'powerline)
+  
+  (defface powerline-active2-g '((t (:background "#99a6af" :inherit mode-line)))
+    "Powerline face 2."
+    :group 'powerline)
+  
+  (defface powerline-inactive1-g
+    '((t (:background "#cecece" :inherit mode-line-inactive)))
+    "Powerline face 1."
+    :group 'powerline)
+  
+  (defface powerline-inactive2-g
+    '((t (:background "#9e9e9e" :inherit mode-line-inactive)))
+    "Powerline face 2."
+    :group 'powerline)
+  
+    
   (setq-default mode-line-format
-                (list
-                 '("%e"
-                   mode-line-mule-info
-                   mode-line-modified
-                   (wg-mode-line-on
-                    (:eval
-                     (wg-mode-line-string)))
-                   minor-mode-alist)
-                 '(:eval (concat (propertize " " 'display arrow-right-0)))
-                 '(:eval (concat (propertize " %m " 'face 'mode-line-color-1)
-                                 (propertize " " 'display arrow-right-1)))
-                 '(:eval (concat (propertize " %b " 'face 'mode-line-color-2)
-                                 (propertize " " 'display arrow-right-2)))
-                 ;; Justify right by filling with spaces to right fringe - 16
-                 ;; (16 should be computed rahter than hardcoded)
-                 '(vc-mode vc-mode)
-                 '(:eval (propertize " " 'display '((space :align-to (- right-fringe 17)))))
-                 '(:eval (concat (propertize " " 'display arrow-left-2)
-                                 (propertize " %p " 'face 'mode-line-color-2)))
-                 '(:eval (concat (propertize " " 'display arrow-left-1)
-                                 (propertize "%4l:%2c  " 'face 'mode-line-color-1)))
-                 ))
+                '("%e"
+                  (:eval
+                   (let* ((active (powerline-selected-window-active))
+                          (face1 (if active 'powerline-active1-g
+                                   'powerline-inactive1-g))
+                          (face2 (if active 'powerline-active2-g
+                                   'powerline-inactive2-g))
+                          (lhs (list
+                                (powerline-raw "%*" nil 'l)
+                                (powerline-raw (wg-mode-line-string) nil 'l)
+                                (powerline-buffer-size nil 'l)
+                                (powerline-buffer-id nil 'l)
   
+                                (powerline-raw " ")
+                                (powerline-arrow-right nil face1)
   
-  (make-face 'mode-line-color-1)
-  (set-face-attribute 'mode-line-color-1 nil
-                      :foreground "#fffacd"
-                      :bold t
-                      :background color1)
+                                (when (boundp 'erc-modified-channels-object)
+                                  (powerline-raw erc-modified-channels-object
+                                                 face1 'l))
   
-  (make-face 'mode-line-color-2)
-  (set-face-attribute 'mode-line-color-2 nil
-                      :foreground "#fffacd"
-                      :bold t
-                      :background color2)
+                                (powerline-major-mode face1 'l)
+                                (powerline-process face1)
+                                (powerline-minor-modes face1 'l)
+                                (powerline-narrow face1 'l)
   
-  (set-face-attribute 'mode-line nil
-                      :foreground "#fffacd"
-                      :background "#171717"
-                      :box nil)
-  (set-face-attribute 'mode-line-inactive nil
-                      :foreground "#fffacd"
-                      :background "#171717")
+                                (powerline-raw " " face1)
+                                (powerline-arrow-right face1 face2)
+  
+                                (powerline-vc face2)))
+                          (rhs (list
+                                (powerline-raw global-mode-string face2 'r)
+  
+                                (powerline-arrow-left face2 face1)
+  
+                                (powerline-raw "%4l" face1 'r)
+                                (powerline-raw ":" face1)
+                                (powerline-raw "%3c" face1 'r)
+  
+                                (powerline-arrow-left face1 nil)
+                                (powerline-raw " ")
+                                (powerline-raw "%6p" nil 'r)    
+    
+                                (powerline-hud face2 face1))))
+                     (concat
+                      (powerline-render lhs)
+                      (powerline-fill face2 (powerline-width rhs))
+                      (powerline-render rhs))))))
+  
+  (setq display-time-string-forms '((format
+                                     "%s/%s(%s) %s:%s" month day dayname 24-hours minutes)))
+  
+  (display-time-mode t)
+  
+    
+  
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (require 'powerline)
+  ;; colors...
+  ;;(setq powerline-color1 "#222")      ;; dark grey; 
+  ;;(setq powerline-color2 "#444")      ;; slightly lighter grey
+  (setq powerline-color1 "#daa520")      ;; goldenrod
+  (setq powerline-color2 "#ffd700")      ;; gold
+  
+  ;; def some strings
+  (defpowerline time "%M")
+  
+  ;; shape...
+  (setq powerline-arrow-shape 'rounded) ;; mirrored arrows, 
+  ;; see below for the shape options
+  (display-time)
+  (setq-default mode-line-format
+        (list 
+         '("%e"
+           mode-line-mule-info
+           mode-line-modified
+           (wg-mode-line-on
+            (:eval
+             (wg-mode-line-string)))
+           )
+         '(:eval (concat
+                  (powerline-rmw            'left   nil  )
+                  (powerline-buffer-id      'left   nil  powerline-color1  )
+                  (powerline-major-mode     'left        powerline-color1  )
+                  (powerline-minor-modes    'left        powerline-color1  )
+                  (powerline-narrow         'left        powerline-color1  powerline-color2  )
+                  (powerline-vc             'center                        powerline-color2  )
+                  (powerline-make-fill                                     powerline-color2  )
+                  (powerline-row            'right       powerline-color1  powerline-color2  )
+                  (powerline-make-text      ":"          powerline-color1  )
+                  (powerline-column         'right       powerline-color1  )
+                  (powerline-percent        'right       powerline-color1  )
+                  (powerline-time           'right  nil  powerline-color1  )
+                  (powerline-make-text      "  "    nil  )))))
+  
+  ;; time string format
+  (setq display-time-string-forms '((format
+                                     "%s/%s(%s) %s:%s" month day dayname 24-hours minutes)))
+  (display-time-mode t)
   
 #+end_src
 
@@ -933,6 +1023,77 @@ Create =html= files form the =org= sources, to help with documentation. To set u
     (interactive)
     (load-file (concat starter-kit-dir "init.el"))
   )
+#+end_src
+** Eshell
+*** prompt
+#+name: eshell prompt
+#+begin_src emacs-lisp
+  ;; borrowed from http://www.emacswiki.org/emacs/EshellPrompt
+  
+  (defmacro with-face (str &rest properties)
+    `(propertize ,str 'face (list ,@properties)))
+  
+  (defun goldbar-eshell-prompt ()
+    (let ((background "#1d1f21")
+          (current-line "#282a2e")
+          (selection "#373b41")
+          (foreground "#c5c8c6")
+          (comment "#969896")
+          (red "#cc6666")
+          (orange "#de935f")
+          (yellow "#f0c674")
+          (green "#b5bd68")
+          (aqua "#8abeb7")
+          (blue "#81a2be")
+          (purple "#b294bb"))
+      (concat
+       (with-face "┌─[")
+       (with-face (format-time-string "%a %b %d " (current-time)) :foreground aqua :weight 'bold)
+       (with-face (format-time-string "%T " (current-time)) :foreground red :weight 'bold)
+       (with-face "][")
+       (with-face user-login-name :foreground green :weight 'bold)
+       (with-face "][")
+       (with-face system-name :foreground green)
+       (with-face "]")
+       (with-face
+        (or (ignore-errors (format "[" (vc-responsible-backend default-directory))) ""))
+       (with-face
+        (or (ignore-errors (format "%s" (vc-responsible-backend default-directory))) "") :foreground yellow)
+       (with-face
+        (or (ignore-errors (format "]" (vc-responsible-backend default-directory))) ""))
+       (with-face "[")
+       (with-face (eshell/pwd) :foreground aqua)
+       (with-face "]")
+       (with-face "\n└─▪")
+       ;; (if (= (user-uid) 0)
+       ;;     (with-face " #" :foreground "red")
+       ;;   " $")
+       " ")))
+  (setq eshell-prompt-function 'goldbar-eshell-prompt)
+  (setq eshell-highlight-prompt nil)
+  
+#+end_src
+
+** Word count
+#+name: word-count
+#+begin_src emacs-lisp
+  ;; from http://emacs-fu.blogspot.kr/2009/01/counting-words.html
+  
+  (defun goldbar-count-words (&optional begin end)
+    "count words between BEGIN and END (region); if no region defined, count words in buffer"
+    (interactive "r")
+    (let ((b (if mark-active begin (point-min)))
+          (e (if mark-active end (point-max))))
+      (message "Word count: %s" (how-many "\\w+" b e))))
+  
+#+end_src
+
+** Markdown mode
+#+begin_src emacs-lisp
+  (autoload 'markdown-mode "markdown-mode.el" "Major mode for editing Markdown files" t)
+  (setq auto-mode-alist
+        (cons '("\\.md" . markdown-mode) auto-mode-alist))
+  (add-hook 'markdown-mode-hook 'turn-on-flyspell)  
 #+end_src
 ** Final Custom elements
 Some local tweaks.
