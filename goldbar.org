@@ -693,6 +693,13 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (add-hook 'org-mode-hook 'turn-on-flyspell)
 #+end_src
 
+*** Add org-bullets hook
+#+name: org-bullets
+#+begin_src emacs-lisp
+  (require 'org-bullets)
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+#+end_src
+
 ** Local iBuffer Settings
    Manage a lot of buffers easily with C-x C-b. Already set up
    elsewhere in the starter kit. Add local configuration here, e.g.,
