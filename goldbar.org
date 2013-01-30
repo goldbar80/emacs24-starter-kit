@@ -5,7 +5,7 @@
   (add-to-list 'custom-theme-load-path (concat starter-kit-dir "submodules/color-themes"))
   
   (if window-system
-      (load-theme 'twilight-bright t)
+      (load-theme 'twilight-anti-bright t)
     (load-theme 'tangosoft t) ;; Emacs started in tty
     )
   
@@ -154,16 +154,18 @@ Tell RefTeX where the bibliography files are.
     '(add-to-list 'TeX-expand-list
                   '("%(-pdf)" (lambda ()
                                  (if (and (not TeX-Omega-mode) (or TeX-PDF-mode TeX-DVI-via-PDFTeX)) "-pdflatex='pdflatex -shell-escape -synctex=1 -interaction=nonstopmode' -pdf" "")))))
-
+  
   (eval-after-load "tex"
     '(add-to-list 'TeX-command-list
                   '("Make" "latexmk %(-pdf) %t" TeX-run-TeX nil
                     (latex-mode doctex-mode) :help "Run latexmk")))
-
+  
   (eval-after-load "latex"
     '(add-to-list 'LaTeX-clean-intermediate-suffixes "\\.fdb_latexmk"))
-
-
+  (eval-after-load "latex"
+    '(add-to-list 'LaTeX-clean-intermediate-suffixes "\\.auxlock"))
+  (eval-after-load "latex"
+    '(add-to-list 'LaTeX-clean-intermediate-suffixes "\\.fls"))
 #+end_src
 *** Add flyspell mode hook
 #+srcname: auctex-flyspell
@@ -698,8 +700,35 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+begin_src emacs-lisp
   (require 'org-bullets)
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+  
+  (setq org-bullets-bullet-list
+        '(
+      ;;; Large
+          "◉"
+          "●"
+          "○"
+          "◆"
+          "◇"
+      ;;; Small
+          "►"
+          "•"
+          "★"
+          "▸"
+          ))
+  
 #+end_src
-
+*** Set org level faces
+#+name: org-level-faces
+#+begin_src emacs-lisp
+  ;;; fix level 4 italic font to normal
+  (custom-set-faces
+   '(org-level-1 ((t (:inherit outline-1 :height 1.3))))
+   '(org-level-2 ((t (:inherit outline-2 :height 1.2))))
+   '(org-level-3 ((t (:inherit outline-3 :height 1.15))))
+   '(org-level-4 ((t (:inherit outline-4 :slant normal :height 1.1))))
+   '(org-level-5 ((t (:inherit outline-5 :height 1.05))))
+   )
+#+end_src
 ** Local iBuffer Settings
    Manage a lot of buffers easily with C-x C-b. Already set up
    elsewhere in the starter kit. Add local configuration here, e.g.,
@@ -900,21 +929,40 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   ;;   :group 'powerline)
   
   ;; for twilight-bright
-  (defface powerline-active1-g '((t (:background "#c9d6df" :inherit mode-line))) 
+  ;; (defface powerline-active1-g '((t (:background "#c9d6df" :inherit mode-line))) 
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+  
+  ;; (defface powerline-active2-g '((t (:background "#99a6af" :inherit mode-line)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+  
+  ;; (defface powerline-inactive1-g
+  ;;   '((t (:background "#cecece" :inherit mode-line-inactive)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+  
+  ;; (defface powerline-inactive2-g
+  ;;   '((t (:background "#9e9e9e" :inherit mode-line-inactive)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+  
+  ;; for twilight-anti-bright
+  (defface powerline-active1-g '((t (:foreground "#8eafd9" :background "#3b535e" :inherit mode-line))) 
     "Powerline face 1."
     :group 'powerline)
   
-  (defface powerline-active2-g '((t (:background "#99a6af" :inherit mode-line)))
+  (defface powerline-active2-g '((t (:foreground "#aecff9" :background "#6b838e" :inherit mode-line)))
     "Powerline face 2."
     :group 'powerline)
   
   (defface powerline-inactive1-g
-    '((t (:background "#cecece" :inherit mode-line-inactive)))
+    '((t (:foreground "#567e9a" :background "#3f4750" :inherit mode-line-inactive)))
     "Powerline face 1."
     :group 'powerline)
   
   (defface powerline-inactive2-g
-    '((t (:background "#9e9e9e" :inherit mode-line-inactive)))
+    '((t (:foreground "#769eba" :background "#6f7780" :inherit mode-line-inactive)))
     "Powerline face 2."
     :group 'powerline)
   
@@ -1102,195 +1150,214 @@ Create =html= files form the =org= sources, to help with documentation. To set u
         (cons '("\\.md" . markdown-mode) auto-mode-alist))
   (add-hook 'markdown-mode-hook 'turn-on-flyspell)  
 #+end_src
+*** custom face
+#+name: markdown-level-faces
+#+begin_src emacs-lisp
+  (custom-set-faces
+   '(markdown-header-face-1 ((t (:inherit markdown-header-face :height 1.7))))
+   '(markdown-header-face-2 ((t (:inherit markdown-header-face :height 1.5))))
+   '(markdown-header-face-3 ((t (:inherit markdown-header-face :height 1.3))))
+   '(markdown-header-face-4 ((t (:inherit markdown-header-face :height 1.2))))
+   '(markdown-header-face-5 ((t (:inherit markdown-header-face :height 1.1))))
+   )
+#+end_src
+** Ansi term
+*** support unicode chars
+#+name: ansi term unicode chars
+#+begin_src emacs-lisp
+  (defadvice ansi-term (after advise-ansi-term-coding-system)
+    (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))
+  (ad-activate 'ansi-term)
+#+end_src
 ** Final Custom elements
 Some local tweaks.
 
 #+name: final-custom
 #+begin_src emacs-lisp
-
-  ;; auto revert
-  ;;(global-auto-revert-mode t)
-
-  ;;input method
-  ;; set input-method toggle key
-  (global-set-key (kbd "S-SPC") 'toggle-input-method)
-  ;;(set-input-method "korean-hangul")
-
-  ;; start eshell with name
-  (defun neshell (name)
-    "Create an eshell buffer with a specified name"
-    (interactive "sName: ")
-    (setq name (concat "$" name))
-    (eshell)
-    (rename-buffer name))
-
-  ;; make buffer name unique
-  ;; from emacs-FY
-  (require 'uniquify)
-  (setq
-   uniquify-buffer-name-style 'post-forward
-   uniquify-separator ":")
-
-
-  ;; open the current buffer using external programs
-  (defun open-external ()
-    "open the current buffer using external programs"
-    (interactive)
-    (shell-command
-     (format "open %s"
-             (shell-quote-argument (buffer-file-name)))))
-  (global-set-key (kbd "s-1") 'open-external)
-
-  ;; open the current buffer's directory using Finder
-  (defun open-finder ()
-    "open the current buffer's directory using Finder"
-    (interactive)
-    (shell-command
-     (format "open %s"
-             (shell-quote-argument (file-name-directory (buffer-file-name))))))
-  (global-set-key (kbd "s-2") 'open-finder)
-
-  ;; itunes now playing
-  ;; from - emacswiki / NowPlaying
-  (defun _itunes-now-playing ()
-    (do-applescript
-     "tell application \"iTunes\"
-               set currentTrack to the current track
-               set artist_name to the artist of currentTrack
-               set song_title to the name of currentTrack
-               set album_title to the album of currentTrack
-               return \"[\" & album_title & \"]\" & artist_name & \" - \" & song_title
-            end tell"))
-
-  (defun _itunes-next-track ()
-    (do-applescript
-     "tell application \"iTunes\"
-           play next track
-        end tell"))
-
-  (defun _itunes-prev-track ()
-    (do-applescript
-     "tell application \"iTunes\"
-          play previous track
-        end tell"))
-
-  (defun _itunes-playpause ()
-    (do-applescript
-     "tell application \"iTunes\"
-          playpause
-        end tell"))
-
-  (defun itunes-now-playing ()
-    ""
-    (interactive)
-    (let ((name (_itunes-now-playing)))
-      (message (format "%s" name))))
-
-  (defun itunes-next-track ()
-    ""
-    (interactive)
-    (_itunes-next-track)
-    (let ((name (_itunes-now-playing)))
-      (message (format "%s" name))))
-
-  (defun itunes-prev-track ()
-    ""
-    (interactive)
-    (_itunes-prev-track)
-    (let ((name (_itunes-now-playing)))
-      (message (format "%s" name))))
-
-  (defun itunes-playpause ()
-    ""
-    (interactive)
-    (_itunes-playpause)
-    (let ((name (_itunes-now-playing)))
-      (message (format "%s" name))))
-
-  (global-set-key (kbd "s-8") 'itunes-prev-track)
-  (global-set-key (kbd "s-9") 'itunes-playpause)
-  (global-set-key (kbd "s-0") 'itunes-next-track)
-  (global-set-key (kbd "C-`") 'itunes-now-playing)
-
-  ;; use 'open' in dired mode
-  (add-hook 'dired-mode-hook
-            '(lambda ()
-               (define-key dired-mode-map "o" 'dired-open-mac)))
-
-  (defun dired-open-mac ()
-    (interactive)
-    (let ((file-name (dired-get-file-for-visit)))
-      (if (file-exists-p file-name)
-          (call-process "/usr/bin/open" nil 0 nil file-name))))
-
-  (defun transparency-set-initial-value ()
-    "Set initial value of alpha parameter for the current frame"
-    (interactive)
-    (if (equal (frame-parameter nil 'alpha) nil)
-        (set-frame-parameter nil 'alpha 100)))
-
-
-  ;; add transparency to frame
-  (defun transparency-set-value (numb)
-    "Set level of transparency for the current frame"
-    (interactive "nEnter transparency level in range 0-100: ")
-    (if (> numb 100)
-        (message "Error! The maximum value for transparency is 100!")
-      (if (< numb 0)
-          (message "Error! The minimum value for transparency is 0!")
-        (set-frame-parameter nil 'alpha numb))))
-
-  (defun transparency-increase ()
-    "Increase level of transparency for the current frame"
-    (interactive)
-    (transparency-set-initial-value)
-    (if (> (frame-parameter nil 'alpha) 0)
-        (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) -2))
-      (message "This is a minimum value of transparency!")))
-
-  (defun transparency-decrease ()
-    "Decrease level of transparency for the current frame"
-    (interactive)
-    (transparency-set-initial-value)
-    (if (< (frame-parameter nil 'alpha) 100)
-        (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) +2))
-      (message "This is a minimum value of transparency!")))
-
-  ;; sample keybinding for transparency manipulation
-  (global-set-key (kbd "C-?") 'transparency-set-value)
-  ;; the two below let for smooth transparency control
-  (global-set-key (kbd "C->") 'transparency-increase)
-  (global-set-key (kbd "C-<") 'transparency-decrease)
-
-  ;; Line-spacing tweak (Optimized for PragmataPro)
-  (setq-default line-spacing 5)
-
-  ;; minimize fringe
-  (setq-default indicate-empty-lines nil)
-
-  ;; Add keybindings for commenting regions of text
-  (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
-  (global-set-key (kbd "M-'") 'comment-or-uncomment-region)
-
-  ;; Base dir
-  (cd "~/")
-
-  ;; show trailing white space
-  (setq show-trailing-whitespace t)
-
-  ;; custom variables kludge. Why can't I get these to work via setq?
-  (custom-set-variables
-   ;; custom-set-variables was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(LaTeX-XeTeX-command "xelatex -synctex=1")
-   '(TeX-engine (quote xetex))
-   '(TeX-view-program-list (quote (("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b"))))
-   '(TeX-view-program-selection (quote (((output-dvi style-pstricks) "dvips and gv") (output-dvi "xdvi") (output-pdf "Skim") (output-html "xdg-open"))))
-   '(show-paren-mode t)
-   '(blink-cursor-mode nil)
-   '(text-mode-hook (quote (text-mode-hook-identify)))
-   )
-
+  
+    ;; auto revert
+    ;;(global-auto-revert-mode t)
+  
+    ;;input method
+    ;; set input-method toggle key
+    (global-set-key (kbd "S-SPC") 'toggle-input-method)
+    ;;(set-input-method "korean-hangul")
+  
+    ;; start eshell with name
+    (defun neshell (name)
+      "Create an eshell buffer with a specified name"
+      (interactive "sName: ")
+      (setq name (concat "$" name))
+      (eshell)
+      (rename-buffer name))
+  
+    ;; make buffer name unique
+    ;; from emacs-FY
+    (require 'uniquify)
+    (setq
+     uniquify-buffer-name-style 'post-forward-angle-brackets)
+  ;;   uniquify-separator ":")
+    (setq uniquify-min-dir-content 1)
+  
+    ;; open the current buffer using external programs
+    (defun open-external ()
+      "open the current buffer using external programs"
+      (interactive)
+      (shell-command
+       (format "open %s"
+               (shell-quote-argument (buffer-file-name)))))
+    (global-set-key (kbd "s-1") 'open-external)
+  
+    ;; open the current buffer's directory using Finder
+    (defun open-finder ()
+      "open the current buffer's directory using Finder"
+      (interactive)
+      (shell-command
+       (format "open %s"
+               (shell-quote-argument (file-name-directory (buffer-file-name))))))
+    (global-set-key (kbd "s-2") 'open-finder)
+  
+    ;; itunes now playing
+    ;; from - emacswiki / NowPlaying
+    (defun _itunes-now-playing ()
+      (do-applescript
+       "tell application \"iTunes\"
+                 set currentTrack to the current track
+                 set artist_name to the artist of currentTrack
+                 set song_title to the name of currentTrack
+                 set album_title to the album of currentTrack
+                 return \"[\" & album_title & \"]\" & artist_name & \" - \" & song_title
+              end tell"))
+  
+    (defun _itunes-next-track ()
+      (do-applescript
+       "tell application \"iTunes\"
+             play next track
+          end tell"))
+  
+    (defun _itunes-prev-track ()
+      (do-applescript
+       "tell application \"iTunes\"
+            play previous track
+          end tell"))
+  
+    (defun _itunes-playpause ()
+      (do-applescript
+       "tell application \"iTunes\"
+            playpause
+          end tell"))
+  
+    (defun itunes-now-playing ()
+      ""
+      (interactive)
+      (let ((name (_itunes-now-playing)))
+        (message (format "%s" name))))
+  
+    (defun itunes-next-track ()
+      ""
+      (interactive)
+      (_itunes-next-track)
+      (let ((name (_itunes-now-playing)))
+        (message (format "%s" name))))
+  
+    (defun itunes-prev-track ()
+      ""
+      (interactive)
+      (_itunes-prev-track)
+      (let ((name (_itunes-now-playing)))
+        (message (format "%s" name))))
+  
+    (defun itunes-playpause ()
+      ""
+      (interactive)
+      (_itunes-playpause)
+      (let ((name (_itunes-now-playing)))
+        (message (format "%s" name))))
+  
+    (global-set-key (kbd "s-8") 'itunes-prev-track)
+    (global-set-key (kbd "s-9") 'itunes-playpause)
+    (global-set-key (kbd "s-0") 'itunes-next-track)
+    (global-set-key (kbd "C-`") 'itunes-now-playing)
+  
+    ;; use 'open' in dired mode
+    (add-hook 'dired-mode-hook
+              '(lambda ()
+                 (define-key dired-mode-map "o" 'dired-open-mac)))
+  
+    (defun dired-open-mac ()
+      (interactive)
+      (let ((file-name (dired-get-file-for-visit)))
+        (if (file-exists-p file-name)
+            (call-process "/usr/bin/open" nil 0 nil file-name))))
+  
+    (defun transparency-set-initial-value ()
+      "Set initial value of alpha parameter for the current frame"
+      (interactive)
+      (if (equal (frame-parameter nil 'alpha) nil)
+          (set-frame-parameter nil 'alpha 100)))
+  
+  
+    ;; add transparency to frame
+    (defun transparency-set-value (numb)
+      "Set level of transparency for the current frame"
+      (interactive "nEnter transparency level in range 0-100: ")
+      (if (> numb 100)
+          (message "Error! The maximum value for transparency is 100!")
+        (if (< numb 0)
+            (message "Error! The minimum value for transparency is 0!")
+          (set-frame-parameter nil 'alpha numb))))
+  
+    (defun transparency-increase ()
+      "Increase level of transparency for the current frame"
+      (interactive)
+      (transparency-set-initial-value)
+      (if (> (frame-parameter nil 'alpha) 0)
+          (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) -2))
+        (message "This is a minimum value of transparency!")))
+  
+    (defun transparency-decrease ()
+      "Decrease level of transparency for the current frame"
+      (interactive)
+      (transparency-set-initial-value)
+      (if (< (frame-parameter nil 'alpha) 100)
+          (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) +2))
+        (message "This is a minimum value of transparency!")))
+  
+    ;; sample keybinding for transparency manipulation
+    (global-set-key (kbd "C-?") 'transparency-set-value)
+    ;; the two below let for smooth transparency control
+    (global-set-key (kbd "C->") 'transparency-increase)
+    (global-set-key (kbd "C-<") 'transparency-decrease)
+  
+    ;; Line-spacing tweak (Optimized for PragmataPro)
+    (setq-default line-spacing 5)
+  
+    ;; minimize fringe
+    (setq-default indicate-empty-lines nil)
+  
+    ;; Add keybindings for commenting regions of text
+    (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
+    (global-set-key (kbd "M-'") 'comment-or-uncomment-region)
+  
+    ;; Base dir
+    (cd "~/")
+  
+    ;; show trailing white space
+    (setq show-trailing-whitespace t)
+  
+    ;; custom variables kludge. Why can't I get these to work via setq?
+    (custom-set-variables
+     ;; custom-set-variables was added by Custom.
+     ;; If you edit it by hand, you could mess it up, so be careful.
+     ;; Your init file should contain only one such instance.
+     ;; If there is more than one, they won't work right.
+     '(LaTeX-XeTeX-command "xelatex -synctex=1")
+     '(TeX-engine (quote xetex))
+     '(TeX-view-program-list (quote (("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b"))))
+     '(TeX-view-program-selection (quote (((output-dvi style-pstricks) "dvips and gv") (output-dvi "xdvi") (output-pdf "Skim") (output-html "xdg-open"))))
+     '(show-paren-mode t)
+     '(blink-cursor-mode nil)
+     '(text-mode-hook (quote (text-mode-hook-identify)))
+     )
+  
 #+end_src
