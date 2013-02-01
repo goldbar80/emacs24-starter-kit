@@ -120,7 +120,7 @@ Tell RefTeX where the bibliography files are.
 
     ;; Default bibliography
     (setq reftex-default-bibliography
-    '("/Users/goldbar/Documents/BidDeskPapers/goldbar.bib"))
+    '("/Users/goldbar/Dropbox/Bib/goldbar.bib"))
 
 
     ;; CDLaTex minor mode: tab-trigger environments, paired paren
@@ -1168,6 +1168,15 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (defadvice ansi-term (after advise-ansi-term-coding-system)
     (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))
   (ad-activate 'ansi-term)
+#+end_src
+** Artbollocks
+#+name: artbollocks mode
+#+begin_src emacs-lisp
+  (require 'artbollocks-mode)
+  
+  (add-hook 'text-mode-hook 'artbollocks-mode)
+  (add-hook 'org-mode-hook 'artbollocks-mode)
+  (add-hook 'LaTeX-mode-hook 'artbollocks-mode)
 #+end_src
 ** Final Custom elements
 Some local tweaks.
