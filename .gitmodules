@@ -4,3 +4,6 @@
 [submodule "submodules/git-emacs"]
 	path = submodules/git-emacs
 	url = git://github.com/tsgates/git-emacs.git
+[submodule "submodules/artbollocks-mode"]
+	path = submodules/artbollocks-mode
+	url = https://github.com/sachac/artbollocks-mode.git
