@@ -1,5 +1,5 @@
 * Host Specific Customization
-*** Add System Paths
+** Add System Paths
 #+name: add-system-path
 #+begin_src emacs-lisp
   (setenv "PATH"  (concat "/Users/goldbar/local/bin:" 
@@ -11,7 +11,7 @@
   
 #+end_src
 
-*** Add Exec Paths
+** Add Exec Paths
 #+name: add-exec-path
 #+begin_src emacs-lisp
   (setq exec-path (append '("/usr/X11/bin") exec-path))
@@ -23,13 +23,13 @@
 
 #+end_src
 
-*** Set Language Environment
+** Set Language Environment
 #+name: set-lang-env
 #+begin_src emacs-lisp
   (setenv "LANG" "en_US.UTF-8")
 #+end_src
 
-*** Font setting
+** Font setting
 #+name: goldbar-font-setting
 #+begin_src emacs-lisp
   ;; (cond
