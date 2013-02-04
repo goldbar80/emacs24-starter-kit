@@ -774,8 +774,8 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (set-default 'autopair-dont-activate #' (lambda () (eq major-mode 'graphviz-dot-mode)))
 #+end_src
 ** Workgroups
-#+name: workgropus
-#+begin_src emacs-lisp
+#+name: workgropus 
+#+begin_src emacs-lisp :tangle no
   (require 'workgroups)
   (workgroups-mode t)
   (wg-load "~/.emacs.d/wg.saved")
@@ -884,7 +884,30 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (setq gnus-article-sort-functions
         '(gnus-article-sort-by-most-recent-date))
 #+end_src
-
+** Elscreen
+#+name: elscreen
+#+begin_src emacs-lisp :tangle no
+  (setq elscreen-display-screen-number nil)  
+  (elscreen-start)
+#+end_src
+** E2wm
+#+name: e2wm
+#+begin_src emacs-lisp
+  (require 'e2wm)
+  (require 'e2wm-vcs)
+  
+  ;; add keybinding for code perspective
+  (e2wm:add-keymap
+   e2wm:pst-minor-mode-keymap
+   '(
+     ("prefix i" . e2wm:dp-code-navi-imenu-command)
+     ("prefix h" . e2wm:dp-code-navi-history-command)
+     ("prefix m" . e2wm:dp-code-navi-main-command)
+     ("prefix f" . e2wm:dp-code-navi-files-command)
+     ("prefix 6" . e2wm:dp-magit)
+     )
+   e2wm:prefix-key)
+ #+end_src
 ** Powerline
 
 #+begin_src emacs-lisp
@@ -977,7 +1000,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                                    'powerline-inactive2-g))
                           (lhs (list
                                 (powerline-raw "%*" nil 'l)
-                                (powerline-raw (wg-mode-line-string) nil 'l)
+  ;;                              (powerline-raw (wg-mode-line-string) nil 'l)
                                 (powerline-buffer-size nil 'l)
                                 (powerline-buffer-id nil 'l)
   
@@ -1128,7 +1151,6 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (setq eshell-highlight-prompt nil)
   
 #+end_src
-
 ** Word count
 #+name: word-count
 #+begin_src emacs-lisp
@@ -1178,6 +1200,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (add-hook 'org-mode-hook 'artbollocks-mode)
   (add-hook 'LaTeX-mode-hook 'artbollocks-mode)
 #+end_src
+
 ** Final Custom elements
 Some local tweaks.
 
