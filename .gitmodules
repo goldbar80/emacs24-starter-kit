@@ -7,3 +7,6 @@
 [submodule "submodules/artbollocks-mode"]
 	path = submodules/artbollocks-mode
 	url = https://github.com/sachac/artbollocks-mode.git
+[submodule "submodules/cedet"]
+	path = submodules/cedet
+	url = https://github.com/emacsmirror/cedet.git
