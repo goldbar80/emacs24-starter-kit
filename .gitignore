@@ -63,3 +63,15 @@ clu001.org
 
 ## workgroup mode save file
 wg.saved
+
+# semantic
+semanticdb/
+
+# misc
+var/
+
+# auto complete
+ac-comphist.dat
+
+# projectile
+projectile-bookmarks.eld
