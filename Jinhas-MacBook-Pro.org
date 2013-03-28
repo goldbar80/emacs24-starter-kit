@@ -2,12 +2,15 @@
 ** Add System Paths
 #+name: add-system-path
 #+begin_src emacs-lisp
-  (setenv "PATH"  (concat "/Users/goldbar/local/bin:" 
-                          (concat  "/Users/goldbar/.cabal/bin:"
-                                   (concat  "/usr/local/opt/coreutils/libexec/gnubin:"
-                                            (concat "/usr/local/bin:" 
-                                                    (concat "/usr/local/sbin" 
-                                                            (concat "/usr/X11/bin:" (getenv "PATH"))))))))
+  (setenv "PATH"  (concat (getenv "HOME") "/local/bin:" 
+                          (getenv "HOME") "/.cabal/bin:"
+                          "/usr/local/var/renv/shims:"
+                          "/usr/local/share/python:"
+                          "/usr/local/share/npm/bin:"
+                          "/usr/local/opt/coreutils/libexec/gnubin:"
+                          "/usr/local/bin:" 
+                          "/usr/local/sbin" 
+                          "/usr/X11/bin:" (getenv "PATH")))
   
 #+end_src
 
@@ -18,8 +21,11 @@
   (setq exec-path (append '("/usr/local/sbin") exec-path))
   (setq exec-path (append '("/usr/local/bin") exec-path))
   (setq exec-path (append '("/usr/local/opt/coreutils/libexec/gnubin") exec-path))
-  (setq exec-path (append '("/Users/goldbar/.cabal/bin") exec-path))
-  (setq exec-path (append '("/Users/goldbar/local/bin") exec-path))
+  (setq exec-path (append '("/usr/local/share/npm/bin") exec-path))
+  (setq exec-path (append '("/usr/local/share/phyton") exec-path))
+  (setq exec-path (append '("/usr/local/var/renv/shims") exec-path))
+  (setq exec-path (append '((concat ((getenv "HOME") "/.cabal/bin"))) exec-path))
+  (setq exec-path (append '((concat ((getenv "HOME") "/local/bin"))) exec-path))
 
 #+end_src
 
@@ -39,13 +45,18 @@
   ;;  ((font-existsp "Consolas")
   ;;   (set-face-attribute 'default nil :height 120 :font "Consolas"))
   ;;  )
-
-  (let ((fontset "fontset-default"))
-    (set-fontset-font fontset 'latin
-                      '("DejaVu Sans Mono" . "unicode-bmp"))
-    (set-fontset-font fontset 'hangul
-                      '("NanumGothicCoding" . "unicode-bmp"))
-    (set-face-attribute 'default nil
-                        :font fontset
-                        :height 140))
+  (require 'font-utils)
+  (cond
+   ((eq window-system nil) nil)
+   ((font-utils-exists-p "Source Code Pro")
+    (let ((fontset "fontset-default"))
+      (set-fontset-font fontset 'latin
+                        (font-spec :family "Source Code Pro" :weight 'light :registry "unicode-bmp"))
+      (set-fontset-font fontset 'hangul
+                        '("NanumGothicCoding" . "unicode-bmp"))
+      (set-face-attribute 'default nil
+                          :font fontset
+                          :height 140))))
+  
+  
 #+end_src
