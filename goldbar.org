@@ -1,14 +1,23 @@
 * User Specific Customization
+** OSX meta key setting
+#+name: osx-meta
+#+begin_src emacs-lisp
+  (setq mac-option-modifier 'meta)
+  (setq mac-command-modifier 'super)
+#+end_src
+
 ** Color theme (> Emacs 24)
 #+name: setting color theme
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path (concat starter-kit-dir "submodules/color-themes"))
-  
-  (if window-system
-      (load-theme 'twilight-anti-bright t)
-    (load-theme 'tangosoft t) ;; Emacs started in tty
+
+  (if (not window-system)
+      (load-theme 'twilight-bright t) ;; Emacs started in tty
+    ;; (load-theme 'sanityinc-solarized-dark t)
+    ;; (load-theme 'twilight-anti-bright t)
+    (load-theme 'base16-mocha t)
     )
-  
+
 #+end_src
 ** Toggle Window split
    #+begin_src emacs-lisp
@@ -36,14 +45,20 @@
                (set-window-buffer (next-window) next-win-buffer)
                (select-window first-win)
                (if this-win-2nd (other-window 1))))))
-     
+
      (global-set-key (kbd "C-c y") 'toggle-window-split)
    #+end_src
-   
+
 ** Full screen
 #+name: full screen
 #+begin_src emacs-lisp
-  (global-set-key (kbd "C-c f") 'ns-toggle-fullscreen)
+  (defun tfullscreen ()
+    "Toggle full screen"
+    (interactive)
+    (set-frame-parameter
+     nil 'fullscreen
+     (when (not (frame-parameter nil 'fullscreen)) 'fullboth)))
+  (global-set-key (kbd "C-c f") 'tfullscreen)
 #+end_src
 
 ** Recent file menu
@@ -153,13 +168,13 @@ Tell RefTeX where the bibliography files are.
   (eval-after-load "tex"
     '(add-to-list 'TeX-expand-list
                   '("%(-pdf)" (lambda ()
-                                 (if (and (not TeX-Omega-mode) (or TeX-PDF-mode TeX-DVI-via-PDFTeX)) "-pdflatex='pdflatex -shell-escape -synctex=1 -interaction=nonstopmode' -pdf" "")))))
-  
+                                 (if (and (not TeX-Omega-mode) (or TeX-PDF-mode TeX-DVI-via-PDFTeX)) "-pdflatex='xelatex -shell-escape -synctex=1 -interaction=nonstopmode -file-line-error' -pdf" "")))))
+
   (eval-after-load "tex"
     '(add-to-list 'TeX-command-list
                   '("Make" "latexmk %(-pdf) %t" TeX-run-TeX nil
                     (latex-mode doctex-mode) :help "Run latexmk")))
-  
+
   (eval-after-load "latex"
     '(add-to-list 'LaTeX-clean-intermediate-suffixes "\\.fdb_latexmk"))
   (eval-after-load "latex"
@@ -171,6 +186,17 @@ Tell RefTeX where the bibliography files are.
 #+srcname: auctex-flyspell
 #+begin_src emacs-lisp
   (add-hook 'LaTeX-mode-hook 'turn-on-flyspell)
+#+end_src
+
+*** Replace a paragraph into a sequence of sentences in a region
+#+name: replace
+#+begin_src emacs-lisp
+  (defun replace-paragraph (sPos ePos)
+    "replace a paragraph in to a sequnce of sentences between which a comment line exists."
+    (interactive "r")
+    (replace-regexp "\." ".
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  " nil sPos ePos))
 #+end_src
 
 ** Local Org-mode Settings
@@ -516,13 +542,13 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
 #+source: org-mode-norang-agenda-view
 #+begin_src emacs-lisp
-  
+
   ;; default one day
   (setq org-agenda-ndays 1)
-  
+
   ;; Do not dim blocked tasks
   (setq org-agenda-dim-blocked-tasks nil)
-  
+
   ;; Custom agenda command definitions
   (setq org-agenda-custom-commands
         (quote (("N" "Notes" tags "NOTE"
@@ -607,7 +633,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                 ("A" "Tasks to Archive" tags "-REFILE/"
                  ((org-agenda-overriding-header "Tasks to Archive")
                   (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))))
-  
+
 #+end_src
 
 
@@ -700,7 +726,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+begin_src emacs-lisp
   (require 'org-bullets)
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-  
+
   (setq org-bullets-bullet-list
         '(
       ;;; Large
@@ -715,7 +741,6 @@ Create =html= files form the =org= sources, to help with documentation. To set u
           "★"
           "▸"
           ))
-  
 #+end_src
 *** Set org level faces
 #+name: org-level-faces
@@ -729,6 +754,143 @@ Create =html= files form the =org= sources, to help with documentation. To set u
    '(org-level-5 ((t (:inherit outline-5 :height 1.05))))
    )
 #+end_src
+** Org-Jekyll Site Generation
+#+name: org-jekyll
+#+begin_src emacs-lisp
+  ;;; Emacs org-mode support for blogging with Jekyll.
+  ;;;
+  ;;; To use, just put this file somewhere in your emacs load path and
+  ;;; (require 'org-jekyll)
+  ;;;
+  ;;; An article showing its use can be found at:
+  ;;;    - http://www.gorgnegre.com/linux/using-emacs-orgmode-to-blog-with-jekyll.html
+  ;;;
+  ;;; Adapted from
+  ;;;    - http://orgmode.org/worg/org-tutorials/org-jekyll.html
+  ;;;    - https://github.com/metajack/jekyll/blob/master/emacs/jekyll.el
+  ;;;
+  ;;; Gorg Negre 2012-07-05
+  (require 'org-jekyll)
+
+  ;; Improve our blogging experience with Org-Jekyll. This code sets four
+  ;; functions with corresponding key bindings:
+  ;;
+  ;; C-c j n - Create new draft
+  ;; C-c j P - Post current draft
+  ;; C-c j d - Show all drafts
+  ;; C-c j p - Show all posts
+  ;;
+  ;; Once a draft has been posted (i.e., moved from the _drafts
+  ;; directory to _post with the required date prefix in the filename), we
+  ;; then need to html-export it to the jekyll rootdir (with org-publish).
+
+  (global-set-key (kbd "C-c k n") 'jekyll-draft-post)
+  (global-set-key (kbd "C-c k P") 'jekyll-publish-post)
+  (global-set-key (kbd "C-c k p") (lambda ()
+                                    (interactive)
+                                    (find-file "~/git/org-homepage/org/_posts/")))
+  (global-set-key (kbd "C-c k d") (lambda ()
+                                    (interactive)
+                                    (find-file "~/git/org-homepage/org/_drafts/")))
+
+  (defvar jekyll-directory "/Volumes/Users/goldbar/git/org-homepage/org/"
+    "Path to Jekyll blog.")
+  (defvar jekyll-drafts-dir "_drafts/"
+    "Relative path to drafts directory.")
+  (defvar jekyll-posts-dir "_posts/"
+    "Relative path to posts directory.")
+  (defvar jekyll-post-ext ".org"
+    "File extension of Jekyll posts.")
+  (defvar jekyll-post-template
+    "#+STARTUP: showall\n#+STARTUP: hidestars\n#+OPTIONS: H:2 num:nil tags:nil toc:1 timestamps:t\n#+BEGIN_HTML\n---\nlayout: post\ntitle: %s\nexcerpt: \ncategories:\n  -  \ntags:\n  -  \npublished: false\n---\n#+END_HTML\n\n** "
+    "Default template for Jekyll posts. %s will be replace by the post title.")
+
+  (defun jekyll-make-slug (s)
+    "Turn a string into a slug."
+    (replace-regexp-in-string
+     " " "-" (downcase
+              (replace-regexp-in-string
+               "[^A-Za-z0-9 ]" "" s))))
+
+  (defun jekyll-yaml-escape (s)
+    "Escape a string for YAML."
+    (if (or (string-match ":" s)
+            (string-match "\"" s))
+        (concat "\"" (replace-regexp-in-string "\"" "\\\\\"" s) "\"")
+      s))
+
+  (defun jekyll-draft-post (title)
+    "Create a new Jekyll blog post."
+    (interactive "sPost Title: ")
+    (let ((draft-file (concat jekyll-directory jekyll-drafts-dir
+                              (jekyll-make-slug title)
+                              jekyll-post-ext)))
+      (if (file-exists-p draft-file)
+          (find-file draft-file)
+        (find-file draft-file)
+        (insert (format jekyll-post-template (jekyll-yaml-escape title))))))
+
+  (defun jekyll-publish-post ()
+    "Move a draft post to the posts directory, and rename it so that it
+   contains the date."
+    (interactive)
+    (cond
+     ((not (equal
+            (file-name-directory (buffer-file-name (current-buffer)))
+            (concat jekyll-directory jekyll-drafts-dir)))
+      (message "This is not a draft post.")
+      (insert (file-name-directory (buffer-file-name (current-buffer))) "\n"
+              (concat jekyll-directory jekyll-drafts-dir)))
+     ((buffer-modified-p)
+      (message "Can't publish post; buffer has modifications."))
+     (t
+      (let ((filename
+             (concat jekyll-directory jekyll-posts-dir
+                     (format-time-string "%Y-%m-%d-")
+                     (file-name-nondirectory
+                      (buffer-file-name (current-buffer)))))
+            (old-point (point)))
+        (rename-file (buffer-file-name (current-buffer))
+                     filename)
+        (kill-buffer nil)
+        (find-file filename)
+        (set-window-point (selected-window) old-point)))))
+
+
+  ;; Define our org project to be exported. Run "M-x org-export X mvm" to
+  ;; export.
+  (setq org-publish-project-alist
+        '(
+          ("org-page"
+           :base-directory "~/git/org-homepage/org/" ;; Path to your org files.
+           :base-extension "org"
+           :publishing-directory "~/git/org-homepage/rootdir/" ;; Path to your Jekyll project.
+           :recursive t
+           :publishing-function org-publish-org-to-html
+           :headline-levels 6
+           :html-extension "html"
+           :body-only t ;; Only export section between &lt;body&gt; &lt;/body&gt; tags
+           :section-numbers nil
+           :table-of-contents nil
+
+           :author "Jinha Kim"
+           :email "goldbar80@gmail.com"
+           )
+
+          ("org-static-page"
+           :base-directory "~/git/org-homepage/org/"
+           :base-extension "css\\|js\\|png\\|jpg\\|ico\\|gif\\|pdf\\|mp3\\|flac\\|ogg\\|swf\\|php\\|markdown\\|md\\|html\\|htm\\|sh\\|xml\\|gz\\|bz2\\|vcf\\|zip\\|txt\\|tex\\|otf\\|ttf\\|eot\\|rb\\|yml\\|htaccess\\|textile\\|gitignore"
+           :publishing-directory "~/git/org-homepage/rootdir/"
+           :recursive t
+           :publishing-function org-publish-attachment)
+
+          ("page" :components ("org-page" "org-static-page"))
+
+          ))
+
+
+#+end_src
+
 ** Local iBuffer Settings
    Manage a lot of buffers easily with C-x C-b. Already set up
    elsewhere in the starter kit. Add local configuration here, e.g.,
@@ -774,7 +936,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (set-default 'autopair-dont-activate #' (lambda () (eq major-mode 'graphviz-dot-mode)))
 #+end_src
 ** Workgroups
-#+name: workgropus 
+#+name: workgropus
 #+begin_src emacs-lisp :tangle no
   (require 'workgroups)
   (workgroups-mode t)
@@ -789,7 +951,6 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (require 'writegood-mode)
   (global-set-key "\C-cg" 'writegood-mode)
 #+end_src
-
 ** Psvn
 #+name: psvn
 #+begin_src emacs-lisp :tangle no
@@ -811,10 +972,10 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (require 'calfw)
   (require 'calfw-org)
   (require 'calfw-ical)
-  
+
   ;; First day of the week
   (setq calendar-week-start-day 1) ; 0:Sunday, 1:Monday
-  
+
   (defun my-open-cfw-calendar ()
     (interactive)
     (cfw:open-calendar-buffer
@@ -844,23 +1005,23 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                                     (nnimap-address "imap.gmail.com")
                                     (nnimap-server-port 993)
                                     (nnimap-stream ssl)))
-  
+
   ;; Make Gnus NOT ignore [Gmail] mailboxes
   (setq gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
-  
+
   ;; periodic update
   ;; (gnus-demon-add-handler 'gnus-group-get-new-news 10 t)
   ;; (gnus-demon-init)
-  
+
   ;; in case of offline ... prevent emacs crash
   ;; (defadvice gnus-demon-scan-news (around gnus-demon-timeout activate)
   ;;   "Timeout for Gnus."
   ;;   (with-timeout
   ;;       (120 (message "Gnus timed out."))
   ;;     ad-do-it))
-  
-  
-  
+
+
+
 #+end_src
 *** Thread View
 #+name: gnus-thread-tree
@@ -887,7 +1048,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 ** Elscreen
 #+name: elscreen
 #+begin_src emacs-lisp :tangle no
-  (setq elscreen-display-screen-number nil)  
+  (setq elscreen-display-screen-number nil)
   (elscreen-start)
 #+end_src
 ** E2wm
@@ -895,7 +1056,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+begin_src emacs-lisp
   (require 'e2wm)
   (require 'e2wm-vcs)
-  
+
   ;; add keybinding for code perspective
   (e2wm:add-keymap
    e2wm:pst-minor-mode-keymap
@@ -911,85 +1072,107 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 ** Powerline
 
 #+begin_src emacs-lisp
+  (custom-set-faces
+   '(mode-line ((t (:box nil :height 110 :weight light))))
+   '(mode-line-inactive ((t (:box nil :height 90 :weight light)))))
   (require 'powerline)
-    
+
   ;; for solarized-light
-  ;; (defface powerline-active1-g '((t (:background "#ada96e" :inherit mode-line))) 
+  ;; (defface powerline-active1-g '((t (:background "#ada96e" :inherit mode-line)))
   ;;   "Powerline face 1."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-active2-g '((t (:background "#ede275" :inherit mode-line)))
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-inactive1-g
   ;;   '((t (:background "#887755" :inherit mode-line-inactive)))
   ;;   "Powerline face 1."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-inactive2-g
   ;;   '((t (:background "#bbaa55" :inherit mode-line-inactive)))
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
-    
+
   ;; for tomorrow-night
-  ;; (defface powerline-active1-g '((t (:background "#585a5e" :inherit mode-line))) 
+  ;; (defface powerline-active1-g '((t (:background "#585a5e" :inherit mode-line)))
   ;;   "Powerline face 1."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-active2-g '((t (:background "#4a8e87" :inherit mode-line)))
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-inactive1-g
   ;;   '((t (:background "#282a2e" :inherit mode-line-inactive)))
   ;;   "Powerline face 1."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-inactive2-g
   ;;   '((t (:background "#373b41" :inherit mode-line-inactive)))
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
-  
+
   ;; for twilight-bright
-  ;; (defface powerline-active1-g '((t (:background "#c9d6df" :inherit mode-line))) 
+  ;; (defface powerline-active1-g '((t (:background "#c9d6df" :inherit mode-line)))
   ;;   "Powerline face 1."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-active2-g '((t (:background "#99a6af" :inherit mode-line)))
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-inactive1-g
   ;;   '((t (:background "#cecece" :inherit mode-line-inactive)))
   ;;   "Powerline face 1."
   ;;   :group 'powerline)
-  
+
   ;; (defface powerline-inactive2-g
   ;;   '((t (:background "#9e9e9e" :inherit mode-line-inactive)))
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
-  
+
   ;; for twilight-anti-bright
-  (defface powerline-active1-g '((t (:foreground "#8eafd9" :background "#3b535e" :inherit mode-line))) 
+  ;; (defface powerline-active1-g '((t (:foreground "#8eafd9" :background "#3b535e" :inherit mode-line)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+
+  ;; (defface powerline-active2-g '((t (:foreground "#aecff9" :background "#6b838e" :inherit mode-line)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+
+  ;; (defface powerline-inactive1-g
+  ;;   '((t (:foreground "#567e9a" :background "#3f4750" :inherit mode-line-inactive)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+
+  ;; (defface powerline-inactive2-g
+  ;;   '((t (:foreground "#769eba" :background "#6f7780" :inherit mode-line-inactive)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+
+  ;; for base16-mocha
+
+  (defface powerline-active1-g '((t (:foreground "#d8cfcd" :background "#847260" :inherit mode-line)))
     "Powerline face 1."
     :group 'powerline)
-  
-  (defface powerline-active2-g '((t (:foreground "#aecff9" :background "#6b838e" :inherit mode-line)))
+
+  (defface powerline-active2-g '((t (:foreground "#f8efed" :background "#a49280" :inherit mode-line)))
     "Powerline face 2."
     :group 'powerline)
-  
+
   (defface powerline-inactive1-g
-    '((t (:foreground "#567e9a" :background "#3f4750" :inherit mode-line-inactive)))
+    '((t (:foreground "#8e806a" :background "#635646" :inherit mode-line-inactive)))
     "Powerline face 1."
     :group 'powerline)
-  
+
   (defface powerline-inactive2-g
-    '((t (:foreground "#769eba" :background "#6f7780" :inherit mode-line-inactive)))
+    '((t (:foreground "#9e907a" :background "#736656" :inherit mode-line-inactive)))
     "Powerline face 2."
     :group 'powerline)
-  
-    
+
   (setq-default mode-line-format
                 '("%e"
                   (:eval
@@ -1003,68 +1186,68 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   ;;                              (powerline-raw (wg-mode-line-string) nil 'l)
                                 (powerline-buffer-size nil 'l)
                                 (powerline-buffer-id nil 'l)
-  
+
                                 (powerline-raw " ")
                                 (powerline-arrow-right nil face1)
-  
+
                                 (when (boundp 'erc-modified-channels-object)
                                   (powerline-raw erc-modified-channels-object
                                                  face1 'l))
-  
+
                                 (powerline-major-mode face1 'l)
                                 (powerline-process face1)
                                 (powerline-minor-modes face1 'l)
                                 (powerline-narrow face1 'l)
-  
+
                                 (powerline-raw " " face1)
                                 (powerline-arrow-right face1 face2)
-  
+
                                 (powerline-vc face2)))
                           (rhs (list
                                 (powerline-raw global-mode-string face2 'r)
-  
+
                                 (powerline-arrow-left face2 face1)
-  
+
                                 (powerline-raw "%4l" face1 'r)
                                 (powerline-raw ":" face1)
                                 (powerline-raw "%3c" face1 'r)
-  
+
                                 (powerline-arrow-left face1 nil)
                                 (powerline-raw " ")
-                                (powerline-raw "%6p" nil 'r)    
-    
+                                (powerline-raw "%6p" nil 'r)
+
                                 (powerline-hud face2 face1))))
                      (concat
                       (powerline-render lhs)
                       (powerline-fill face2 (powerline-width rhs))
                       (powerline-render rhs))))))
-  
+
   (setq display-time-string-forms '((format
                                      "%s/%s(%s) %s:%s" month day dayname 24-hours minutes)))
-  
+
   (display-time-mode t)
-  
-    
-  
+
+
+
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
   (require 'powerline)
   ;; colors...
-  ;;(setq powerline-color1 "#222")      ;; dark grey; 
+  ;;(setq powerline-color1 "#222")      ;; dark grey;
   ;;(setq powerline-color2 "#444")      ;; slightly lighter grey
   (setq powerline-color1 "#daa520")      ;; goldenrod
   (setq powerline-color2 "#ffd700")      ;; gold
-  
+
   ;; def some strings
   (defpowerline time "%M")
-  
+
   ;; shape...
-  (setq powerline-arrow-shape 'rounded) ;; mirrored arrows, 
+  (setq powerline-arrow-shape 'rounded) ;; mirrored arrows,
   ;; see below for the shape options
   (display-time)
   (setq-default mode-line-format
-        (list 
+        (list
          '("%e"
            mode-line-mule-info
            mode-line-modified
@@ -1086,12 +1269,12 @@ Create =html= files form the =org= sources, to help with documentation. To set u
                   (powerline-percent        'right       powerline-color1  )
                   (powerline-time           'right  nil  powerline-color1  )
                   (powerline-make-text      "  "    nil  )))))
-  
+
   ;; time string format
   (setq display-time-string-forms '((format
                                      "%s/%s(%s) %s:%s" month day dayname 24-hours minutes)))
   (display-time-mode t)
-  
+
 #+end_src
 
 ** Reload configuration!!
@@ -1099,7 +1282,8 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+begin_src emacs-lisp
   (defun reload-emacs ()
     (interactive)
-    (load-file (concat starter-kit-dir "init.el"))
+    ;; (load-file (concat starter-kit-dir "init.el"))
+    (load-file (concat starter-kit-dir "starter-kit.el"))
   )
 #+end_src
 ** Eshell
@@ -1107,10 +1291,10 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+name: eshell prompt
 #+begin_src emacs-lisp
   ;; borrowed from http://www.emacswiki.org/emacs/EshellPrompt
-  
+
   (defmacro with-face (str &rest properties)
     `(propertize ,str 'face (list ,@properties)))
-  
+
   (defun goldbar-eshell-prompt ()
     (let ((background "#1d1f21")
           (current-line "#282a2e")
@@ -1149,20 +1333,20 @@ Create =html= files form the =org= sources, to help with documentation. To set u
        " ")))
   (setq eshell-prompt-function 'goldbar-eshell-prompt)
   (setq eshell-highlight-prompt nil)
-  
+
 #+end_src
 ** Word count
 #+name: word-count
 #+begin_src emacs-lisp
   ;; from http://emacs-fu.blogspot.kr/2009/01/counting-words.html
-  
+
   (defun goldbar-count-words (&optional begin end)
     "count words between BEGIN and END (region); if no region defined, count words in buffer"
     (interactive "r")
     (let ((b (if mark-active begin (point-min)))
           (e (if mark-active end (point-max))))
       (message "Word count: %s" (how-many "\\w+" b e))))
-  
+
 #+end_src
 
 ** Markdown mode
@@ -1170,7 +1354,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (autoload 'markdown-mode "markdown-mode.el" "Major mode for editing Markdown files" t)
   (setq auto-mode-alist
         (cons '("\\.md" . markdown-mode) auto-mode-alist))
-  (add-hook 'markdown-mode-hook 'turn-on-flyspell)  
+  (add-hook 'markdown-mode-hook 'turn-on-flyspell)
 #+end_src
 *** custom face
 #+name: markdown-level-faces
@@ -1195,26 +1379,242 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+name: artbollocks mode
 #+begin_src emacs-lisp
   (require 'artbollocks-mode)
-  
+
   (add-hook 'text-mode-hook 'artbollocks-mode)
   (add-hook 'org-mode-hook 'artbollocks-mode)
-  (add-hook 'LaTeX-mode-hook 'artbollocks-mode)
+  ;;(add-hook 'LaTeX-mode-hook 'artbollocks-mode)
+#+end_src
+
+** Flymake
+#+name: flymake
+#+begin_src emacs-lisp
+  (require 'flymake-cursor)
+  ;; (defun my-flymake-show-error ()
+  ;;   "Display flymake message from current line."
+  ;;   (interactive)
+  ;;   (flymake-display-err-menu-for-current-line))
+  ;; (global-set-key [?\C-`] 'my-flymake-show-error)
+  (defun my-flymake-show-next-error ()
+    (interactive)
+    (flymake-goto-next-error))
+
+  ;; And set it to the shortcut C-c C-v
+  (add-hook 'c-mode-common-hook
+            (lambda ()
+              (flymake-mode t)
+              (global-set-key [?\C-`] 'my-flymake-show-next-error)))
+
+  (defun flymake-get-tex-args (file-name)
+    (list "pdflatex" (list "-file-line-error" "-draftmode" "-interaction=nonstopmode" file-name)))
+
+#+end_src
+
+** CEDET
+#+name: CEDET
+#+begin_src emacs-lisp
+
+  ;;; minimial-cedet-config.el --- Working configuration for CEDET from bzr
+
+  ;; Copyright (C) Alex Ott
+  ;;
+  ;; Author: Alex Ott <alexott@gmail.com>
+  ;; Keywords: cedet, C++, Java
+  ;; Requirements: CEDET from bzr (http://cedet.sourceforge.net/bzr-repo.shtml)
+
+  ;; Do checkout of fresh CEDET, and use this config (don't forget to change path below)
+
+  (setq cedet-root-path (file-name-as-directory "~/git/cedet/"))
+
+  ;;(load-file (concat cedet-root-path "cedet-devel-load.el"))
+  (add-to-list 'load-path (concat cedet-root-path "contrib"))
+
+  ;; select which submodes we want to activate
+  (add-to-list 'semantic-default-submodes 'global-semantic-mru-bookmark-mode)
+  (add-to-list 'semantic-default-submodes 'global-semanticdb-minor-mode)
+  (add-to-list 'semantic-default-submodes 'global-semantic-idle-scheduler-mode)
+  (add-to-list 'semantic-default-submodes 'global-semantic-stickyfunc-mode)
+  (add-to-list 'semantic-default-submodes 'global-cedet-m3-minor-mode)
+  (add-to-list 'semantic-default-submodes 'global-semantic-highlight-func-mode)
+  (add-to-list 'semantic-default-submodes 'global-semanticdb-minor-mode)
+
+  ;; Activate semantic
+  (semantic-mode 1)
+
+  ;; load contrib library
+  (require 'eassist)
+
+  ;; customisation of modes
+  (defun alexott/cedet-hook ()
+    (local-set-key [(control return)] 'semantic-ia-complete-symbol-menu)
+    (local-set-key "\C-c?" 'semantic-ia-complete-symbol)
+    ;;
+    (local-set-key "\C-c>" 'semantic-complete-analyze-inline)
+    (local-set-key "\C-c=" 'semantic-decoration-include-visit)
+
+    (local-set-key "\C-cj" 'semantic-ia-fast-jump)
+    (local-set-key "\C-cq" 'semantic-ia-show-doc)
+    (local-set-key "\C-cs" 'semantic-ia-show-summary)
+    (local-set-key "\C-cp" 'semantic-analyze-proto-impl-toggle)
+    )
+  (add-hook 'c-mode-common-hook 'alexott/cedet-hook)
+  (add-hook 'lisp-mode-hook 'alexott/cedet-hook)
+  (add-hook 'scheme-mode-hook 'alexott/cedet-hook)
+  (add-hook 'emacs-lisp-mode-hook 'alexott/cedet-hook)
+  (add-hook 'erlang-mode-hook 'alexott/cedet-hook)
+
+  (defun alexott/c-mode-cedet-hook ()
+    (local-set-key "\C-ct" 'eassist-switch-h-cpp)
+    (local-set-key "\C-xt" 'eassist-switch-h-cpp)
+    (local-set-key "\C-ce" 'eassist-list-methods)
+    (local-set-key "\C-c\C-r" 'semantic-symref)
+    )
+  (add-hook 'c-mode-common-hook 'alexott/c-mode-cedet-hook)
+
+  (semanticdb-enable-gnu-global-databases 'c-mode t)
+  (semanticdb-enable-gnu-global-databases 'c++-mode t)
+
+  (when (cedet-ectag-version-check t)
+    (semantic-load-enable-primary-ectags-support))
+
+  ;; SRecode
+  (global-srecode-minor-mode 1)
+
+  ;; EDE
+  ;; (global-ede-mode 1)
+  ;; (ede-enable-generic-projects)
+
+
+  ;; Setup JAVA....
+  (require 'cedet-java)
+
+  ;; ;;; minimial-cedet-config.el ends here
+  ;; (add-to-list 'semantic-default-submodes 'global-semanticdb-minor-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-cedet-m3-minor-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-semantic-mru-bookmark-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-semantic-idle-local-symbol-highlight-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-semantic-idle-scheduler-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-semantic-idle-completions-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-semantic-idle-summary-mode)
+  ;; (add-to-list 'semantic-default-submodes 'global-semantic-decoration-mode)
+
+  ;; (require 'semantic/ia)
+  ;; (semantic-mode 1)
+
+  ;; (semantic-add-system-include "/Volumes/Users/goldbar/git/graphchi-mercurial" 'c++-mode)
+
+  ;; (require 'semantic/bovine/gcc)
+
+  ;; ;; Class suggest improvement
+  ;; (defun my-c-mode-cedet-hook ()
+  ;;   (local-set-key "." 'semantic-complete-self-insert)
+  ;;   (local-set-key ">" 'semantic-complete-self-insert))
+  ;; (add-hook 'c-mode-common-hook 'my-c-mode-cedet-hook)
+
+
+  ;; ;; (require 'semantic-load)
+  ;; ;; (require 'semanticdb-system)
+  ;; ;; (require 'semantic-gcc)
+  ;; ;; (require 'semantic-ia)
+  ;; ;; (require 'ede)
+  ;; ;; (require 'ede-locate)
+
+  ;; ;; (semantic-gcc-setup)
+  ;; ;; (setq semantic-load-turn-everything-on t)
+  ;; ;; (semantic-load-enable-excessive-code-helpers)
+  ;; ;; (semanticdb-load-system-caches)
+  ;; ;; (global-ede-mode 1)
+  ;; ;; (global-semantic-idle-completions-mode nil)
+  ;; ;; (global-semantic-decoration-mode t)
+  ;; ;; (global-semantic-highlight-func-mode t)
+  ;; ;; (global-semantic-show-unmatched-syntax-mode t)
+
+#+end_src
+
+** Auto Complete
+#+name: auto-complete
+#+begin_src emacs-lisp
+  (require 'auto-complete-config)
+  (ac-config-default)
+  (add-hook 'c-mode-common-hook '(lambda ()
+                            (setq ac-sources (append '(ac-source-semantic) ac-sources))
+                            (local-set-key (kbd "RET") 'newline-and-indent)
+                            (linum-mode t)
+                            (semantic-mode t)))
+#+end_src
+
+** Variable pitch
+#+name: variable pitch
+#+begin_src emacs-lisp
+  (defun toggle-variable-pitch ()
+    (interactive)
+    (variable-pitch-mode "Merriweather")
+  )
+#+end_src
+** Highlight Sentence
+#+name: hl-sentence
+#+begin_src emacs-lisp
+  (custom-set-faces
+   '(hl-sentence-face ((t (:foreground "#f5eeeb" :background "#645240"))) t)
+   )
+  (setq sentence-end-double-space nil)
+#+end_src
+
+** Helm
+#+name: helm
+#+begin_src emacs-lisp
+(require 'helm-config)
+(setq helm-idle-delay 0.1)
+(setq helm-input-idle-delay 0.1)
+(global-set-key (kbd "M-t") 'helm-for-files)
+(require 'helm-projectile)
+(global-set-key (kbd "C-x p") 'helm-projectile)
+#+end_src
+** Projectile
+#+name: projectile
+#+begin_src emacs-lisp
+  (require 'projectile)
+  (projectile-global-mode)
+
+
 #+end_src
 
 ** Final Custom elements
 Some local tweaks.
 
+*** Rename Current Buffer
+#+name: rename buffer
+#+begin_src emacs-lisp
+  (defun rename-this-buffer-and-file ()
+    "Renames current buffer and file it is visiting."
+    (interactive)
+    (let ((name (buffer-name))
+          (filename (buffer-file-name)))
+      (if (not (and filename (file-exists-p filename)))
+          (error "Buffer '%s' is not visiting a file!" name)
+        (let ((new-name (read-file-name "New name: " filename)))
+          (cond ((get-buffer new-name)
+                 (error "A buffer named '%s' already exists!" new-name))
+                (t
+                 (rename-file filename new-name 1)
+                 (rename-buffer new-name)
+                 (set-visited-file-name new-name)
+                 (set-buffer-modified-p nil)
+                 (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
+  (global-set-key (kbd "C-c r") 'rename-this-buffer-and-file)
+#+end_src
+
+
 #+name: final-custom
 #+begin_src emacs-lisp
-  
+
     ;; auto revert
     ;;(global-auto-revert-mode t)
-  
+
     ;;input method
     ;; set input-method toggle key
     (global-set-key (kbd "S-SPC") 'toggle-input-method)
     ;;(set-input-method "korean-hangul")
-  
+
     ;; start eshell with name
     (defun neshell (name)
       "Create an eshell buffer with a specified name"
@@ -1222,7 +1622,7 @@ Some local tweaks.
       (setq name (concat "$" name))
       (eshell)
       (rename-buffer name))
-  
+
     ;; make buffer name unique
     ;; from emacs-FY
     (require 'uniquify)
@@ -1230,7 +1630,7 @@ Some local tweaks.
      uniquify-buffer-name-style 'post-forward-angle-brackets)
   ;;   uniquify-separator ":")
     (setq uniquify-min-dir-content 1)
-  
+
     ;; open the current buffer using external programs
     (defun open-external ()
       "open the current buffer using external programs"
@@ -1239,7 +1639,7 @@ Some local tweaks.
        (format "open %s"
                (shell-quote-argument (buffer-file-name)))))
     (global-set-key (kbd "s-1") 'open-external)
-  
+
     ;; open the current buffer's directory using Finder
     (defun open-finder ()
       "open the current buffer's directory using Finder"
@@ -1248,87 +1648,87 @@ Some local tweaks.
        (format "open %s"
                (shell-quote-argument (file-name-directory (buffer-file-name))))))
     (global-set-key (kbd "s-2") 'open-finder)
-  
-    ;; itunes now playing
-    ;; from - emacswiki / NowPlaying
-    (defun _itunes-now-playing ()
-      (do-applescript
-       "tell application \"iTunes\"
-                 set currentTrack to the current track
-                 set artist_name to the artist of currentTrack
-                 set song_title to the name of currentTrack
-                 set album_title to the album of currentTrack
-                 return \"[\" & album_title & \"]\" & artist_name & \" - \" & song_title
-              end tell"))
-  
-    (defun _itunes-next-track ()
-      (do-applescript
-       "tell application \"iTunes\"
-             play next track
-          end tell"))
-  
-    (defun _itunes-prev-track ()
-      (do-applescript
-       "tell application \"iTunes\"
-            play previous track
-          end tell"))
-  
-    (defun _itunes-playpause ()
-      (do-applescript
-       "tell application \"iTunes\"
-            playpause
-          end tell"))
-  
-    (defun itunes-now-playing ()
-      ""
-      (interactive)
-      (let ((name (_itunes-now-playing)))
-        (message (format "%s" name))))
-  
-    (defun itunes-next-track ()
-      ""
-      (interactive)
-      (_itunes-next-track)
-      (let ((name (_itunes-now-playing)))
-        (message (format "%s" name))))
-  
-    (defun itunes-prev-track ()
-      ""
-      (interactive)
-      (_itunes-prev-track)
-      (let ((name (_itunes-now-playing)))
-        (message (format "%s" name))))
-  
-    (defun itunes-playpause ()
-      ""
-      (interactive)
-      (_itunes-playpause)
-      (let ((name (_itunes-now-playing)))
-        (message (format "%s" name))))
-  
-    (global-set-key (kbd "s-8") 'itunes-prev-track)
-    (global-set-key (kbd "s-9") 'itunes-playpause)
-    (global-set-key (kbd "s-0") 'itunes-next-track)
-    (global-set-key (kbd "C-`") 'itunes-now-playing)
-  
+
+    ;; ;; itunes now playing
+    ;; ;; from - emacswiki / NowPlaying
+    ;; (defun _itunes-now-playing ()
+    ;;   (do-applescript
+    ;;    "tell application \"iTunes\"
+    ;;              set currentTrack to the current track
+    ;;              set artist_name to the artist of currentTrack
+    ;;              set song_title to the name of currentTrack
+    ;;              set album_title to the album of currentTrack
+    ;;              return \"[\" & album_title & \"]\" & artist_name & \" - \" & song_title
+    ;;           end tell"))
+
+    ;; (defun _itunes-next-track ()
+    ;;   (do-applescript
+    ;;    "tell application \"iTunes\"
+    ;;          play next track
+    ;;       end tell"))
+
+    ;; (defun _itunes-prev-track ()
+    ;;   (do-applescript
+    ;;    "tell application \"iTunes\"
+    ;;         play previous track
+    ;;       end tell"))
+
+    ;; (defun _itunes-playpause ()
+    ;;   (do-applescript
+    ;;    "tell application \"iTunes\"
+    ;;         playpause
+    ;;       end tell"))
+
+    ;; (defun itunes-now-playing ()
+    ;;   ""
+    ;;   (interactive)
+    ;;   (let ((name (_itunes-now-playing)))
+    ;;     (message (format "%s" name))))
+
+    ;; (defun itunes-next-track ()
+    ;;   ""
+    ;;   (interactive)
+    ;;   (_itunes-next-track)
+    ;;   (let ((name (_itunes-now-playing)))
+    ;;     (message (format "%s" name))))
+
+    ;; (defun itunes-prev-track ()
+    ;;   ""
+    ;;   (interactive)
+    ;;   (_itunes-prev-track)
+    ;;   (let ((name (_itunes-now-playing)))
+    ;;     (message (format "%s" name))))
+
+    ;; (defun itunes-playpause ()
+    ;;   ""
+    ;;   (interactive)
+    ;;   (_itunes-playpause)
+    ;;   (let ((name (_itunes-now-playing)))
+    ;;     (message (format "%s" name))))
+
+    ;; (global-set-key (kbd "s-8") 'itunes-prev-track)
+    ;; (global-set-key (kbd "s-9") 'itunes-playpause)
+    ;; (global-set-key (kbd "s-0") 'itunes-next-track)
+    ;; (global-set-key (kbd "C-`") 'itunes-now-playing)
+
     ;; use 'open' in dired mode
     (add-hook 'dired-mode-hook
               '(lambda ()
                  (define-key dired-mode-map "o" 'dired-open-mac)))
-  
+
     (defun dired-open-mac ()
       (interactive)
       (let ((file-name (dired-get-file-for-visit)))
         (if (file-exists-p file-name)
             (call-process "/usr/bin/open" nil 0 nil file-name))))
-  
+
     (defun transparency-set-initial-value ()
       "Set initial value of alpha parameter for the current frame"
       (interactive)
       (if (equal (frame-parameter nil 'alpha) nil)
           (set-frame-parameter nil 'alpha 100)))
-  
-  
+
+
     ;; add transparency to frame
     (defun transparency-set-value (numb)
       "Set level of transparency for the current frame"
@@ -1338,7 +1738,7 @@ Some local tweaks.
         (if (< numb 0)
             (message "Error! The minimum value for transparency is 0!")
           (set-frame-parameter nil 'alpha numb))))
-  
+
     (defun transparency-increase ()
       "Increase level of transparency for the current frame"
       (interactive)
@@ -1346,7 +1746,7 @@ Some local tweaks.
       (if (> (frame-parameter nil 'alpha) 0)
           (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) -2))
         (message "This is a minimum value of transparency!")))
-  
+
     (defun transparency-decrease ()
       "Decrease level of transparency for the current frame"
       (interactive)
@@ -1354,29 +1754,29 @@ Some local tweaks.
       (if (< (frame-parameter nil 'alpha) 100)
           (set-frame-parameter nil 'alpha (+ (frame-parameter nil 'alpha) +2))
         (message "This is a minimum value of transparency!")))
-  
+
     ;; sample keybinding for transparency manipulation
     (global-set-key (kbd "C-?") 'transparency-set-value)
     ;; the two below let for smooth transparency control
     (global-set-key (kbd "C->") 'transparency-increase)
     (global-set-key (kbd "C-<") 'transparency-decrease)
-  
+
     ;; Line-spacing tweak (Optimized for PragmataPro)
     (setq-default line-spacing 5)
-  
+
     ;; minimize fringe
     (setq-default indicate-empty-lines nil)
-  
+
     ;; Add keybindings for commenting regions of text
     (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
     (global-set-key (kbd "M-'") 'comment-or-uncomment-region)
-  
+
     ;; Base dir
     (cd "~/")
-  
+
     ;; show trailing white space
     (setq show-trailing-whitespace t)
-  
+
     ;; custom variables kludge. Why can't I get these to work via setq?
     (custom-set-variables
      ;; custom-set-variables was added by Custom.
@@ -1391,5 +1791,5 @@ Some local tweaks.
      '(blink-cursor-mode nil)
      '(text-mode-hook (quote (text-mode-hook-identify)))
      )
-  
+
 #+end_src
