@@ -15,7 +15,7 @@
       (load-theme 'twilight-bright t) ;; Emacs started in tty
     ;; (load-theme 'sanityinc-solarized-dark t)
     ;; (load-theme 'twilight-anti-bright t)
-    (load-theme 'base16-mocha t)
+    (load-theme 'base16-ocean t)
     )
 
 #+end_src
@@ -756,7 +756,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+end_src
 ** Org-Jekyll Site Generation
 #+name: org-jekyll
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   ;;; Emacs org-mode support for blogging with Jekyll.
   ;;;
   ;;; To use, just put this file somewhere in your emacs load path and
@@ -802,7 +802,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   (defvar jekyll-post-ext ".org"
     "File extension of Jekyll posts.")
   (defvar jekyll-post-template
-    "#+STARTUP: showall\n#+STARTUP: hidestars\n#+OPTIONS: H:2 num:nil tags:nil toc:1 timestamps:t\n#+BEGIN_HTML\n---\nlayout: post\ntitle: %s\nexcerpt: \ncategories:\n  -  \ntags:\n  -  \npublished: false\n---\n#+END_HTML\n\n** "
+    "#+STARTUP: showall\n#+STARTUP: hidestars\n#+OPTIONS: H:2 num:nil tags:nil toc:nil timestamps:t\n#+BEGIN_HTML\n---\nlayout: post\ntitle: %s\ndescription: \ncategories:\n  -  \ntags:\n  -  \npublished: false\n---\n#+END_HTML\n\n** "
     "Default template for Jekyll posts. %s will be replace by the post title.")
 
   (defun jekyll-make-slug (s)
@@ -1073,7 +1073,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
 #+begin_src emacs-lisp
   (custom-set-faces
-   '(mode-line ((t (:box nil :height 110 :weight light))))
+   '(mode-line ((t (:box nil :height 120 :weight light))))
    '(mode-line-inactive ((t (:box nil :height 90 :weight light)))))
   (require 'powerline)
 
@@ -1155,21 +1155,42 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
   ;; for base16-mocha
 
-  (defface powerline-active1-g '((t (:foreground "#d8cfcd" :background "#847260" :inherit mode-line)))
+  ;; (defface powerline-active1-g '((t (:foreground "#d8cfcd" :background "#847260" :inherit mode-line)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+
+  ;; (defface powerline-active2-g '((t (:foreground "#f8efed" :background "#a49280" :inherit mode-line)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+
+  ;; (defface powerline-inactive1-g
+  ;;   '((t (:foreground "#8e806a" :background "#635646" :inherit mode-line-inactive)))
+  ;;   "Powerline face 1."
+  ;;   :group 'powerline)
+
+  ;; (defface powerline-inactive2-g
+  ;;   '((t (:foreground "#9e907a" :background "#736656" :inherit mode-line-inactive)))
+  ;;   "Powerline face 2."
+  ;;   :group 'powerline)
+
+
+  ;; for base16-ocean
+
+  (defface powerline-active1-g '((t (:foreground "#d0d5de" :background "#3b404b" :inherit mode-line)))
     "Powerline face 1."
     :group 'powerline)
 
-  (defface powerline-active2-g '((t (:foreground "#f8efed" :background "#a49280" :inherit mode-line)))
+  (defface powerline-active2-g '((t (:foreground "#e0e5ee" :background "#4b505b" :inherit mode-line)))
     "Powerline face 2."
     :group 'powerline)
 
   (defface powerline-inactive1-g
-    '((t (:foreground "#8e806a" :background "#635646" :inherit mode-line-inactive)))
+    '((t (:foreground "#4f5b66" :background "#2b303b" :inherit mode-line-inactive)))
     "Powerline face 1."
     :group 'powerline)
 
   (defface powerline-inactive2-g
-    '((t (:foreground "#9e907a" :background "#736656" :inherit mode-line-inactive)))
+    '((t (:foreground "#4f5b66" :background "#2b303b" :inherit mode-line-inactive)))
     "Powerline face 2."
     :group 'powerline)
 
@@ -1411,7 +1432,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 
 ** CEDET
 #+name: CEDET
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 
   ;;; minimial-cedet-config.el --- Working configuration for CEDET from bzr
 
@@ -1554,7 +1575,8 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+name: hl-sentence
 #+begin_src emacs-lisp
   (custom-set-faces
-   '(hl-sentence-face ((t (:foreground "#f5eeeb" :background "#645240"))) t)
+   '(hl-sentence-face ((t (:background "#645240"))) t)
+  ; '(hl-sentence-face ((t (:foreground "#f5eeeb" :background "#645240"))) t)
    )
   (setq sentence-end-double-space nil)
 #+end_src
@@ -1603,6 +1625,22 @@ Some local tweaks.
   (global-set-key (kbd "C-c r") 'rename-this-buffer-and-file)
 #+end_src
 
+*** toggle left-right margin
+    #+name: toggle margins
+    #+begin_src emacs-lisp
+      (defun toggle-margin ()
+        "Toggle the centering a buffer by setting left and right margin
+      as much of ((windows-body-width - (fill-column + 20)) / 2). This
+      command is convenient when reading novel, documentation."
+        (interactive)
+        (if (eq (cdr (window-margins)) nil)
+            (let ((w (/ (- (window-body-width) (+ fill-column 20)) 2)))
+              ;; (set-window-margins nil 0 (- (window-body-width) fill-column))
+              (set-window-margins nil w w))
+              (set-window-margins nil 0 0)
+          ) )
+      (global-set-key (kbd "C-c m") 'toggle-margin)
+    #+end_src
 
 #+name: final-custom
 #+begin_src emacs-lisp
@@ -1788,6 +1826,7 @@ Some local tweaks.
      '(TeX-view-program-list (quote (("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b"))))
      '(TeX-view-program-selection (quote (((output-dvi style-pstricks) "dvips and gv") (output-dvi "xdvi") (output-pdf "Skim") (output-html "xdg-open"))))
      '(show-paren-mode t)
+     '(show-paren-style 'mixed)
      '(blink-cursor-mode nil)
      '(text-mode-hook (quote (text-mode-hook-identify)))
      )
