@@ -51,20 +51,11 @@ secret.org
 .emacs.desktop*
 .*~
 
-## ignore OSX related files
-.DS_Store
-
-## ignore SVN
-.svn
 
 ## host specific file except for default
 joseph.org
 clu001.org
 
-## workgroup mode save file
-wg.saved
-
-# semantic
 semanticdb/
 
 # misc
@@ -75,3 +66,4 @@ ac-comphist.dat
 
 # projectile
 projectile-bookmarks.eld
+agent/*

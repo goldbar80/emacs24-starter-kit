@@ -91,7 +91,7 @@ mentioned in [[customizations]] immediately below.
    :END:
 
 The defaults built into the starter kit are only the beginning of
-most users customization of Emacs to suite their needs.  The starter
+most users customization of Emacs to suit their needs.  The starter
 kit provides a number of places for additional user and system
 specific customization.  These are designed in such a way that it will
 be easy for you to continue tracking your own personal customization
@@ -262,6 +262,25 @@ interested in the actual code implementing the starter kit.
     (require 'recentf)
   #+end_src
 
+- ELPA archive repositories and two packages to install by default.
+  #+begin_src emacs-lisp
+    (setq package-archives
+          '(("gnu"         . "http://elpa.gnu.org/packages/")
+            ("original"    . "http://tromey.com/elpa/")
+            ("org"         . "http://orgmode.org/elpa/")
+            ("marmalade"   . "http://marmalade-repo.org/packages/")))
+    (package-initialize)
+    
+    (defvar starter-kit-packages
+      (list 'yasnippet-bundle)
+      "Libraries that should be installed by default.")
+    
+    (unless package-archive-contents
+      (package-refresh-contents))
+    (dolist (package starter-kit-packages)
+      (unless (package-installed-p package)
+        (package-install package)))
+  #+end_src
 
 - Functions for loading other parts of the starter kit
   #+name: starter-kit-load
