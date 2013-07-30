@@ -2,16 +2,16 @@
 ** Add System Paths
 #+name: add-system-path
 #+begin_src emacs-lisp
-  (setenv "PATH"  (concat (getenv "HOME") "/local/bin:" 
+  (setenv "PATH"  (concat (getenv "HOME") "/local/bin:"
                           (getenv "HOME") "/.cabal/bin:"
                           "/usr/local/var/renv/shims:"
                           "/usr/local/share/python:"
                           "/usr/local/share/npm/bin:"
                           "/usr/local/opt/coreutils/libexec/gnubin:"
-                          "/usr/local/bin:" 
-                          "/usr/local/sbin" 
+                          "/usr/local/bin:"
+                          "/usr/local/sbin"
                           "/usr/X11/bin:" (getenv "PATH")))
-  
+
 #+end_src
 
 ** Add Exec Paths
@@ -38,25 +38,23 @@
 ** Font setting
 #+name: goldbar-font-setting
 #+begin_src emacs-lisp
-  ;; (cond
-  ;;  ((eq window-system nil) nil)
-  ;;  ((font-existsp "DejaVu Sans Mono")
-  ;;   (set-face-attribute 'default nil :height 120 :font "DejaVu Sans Mono"))
-  ;;  ((font-existsp "Consolas")
-  ;;   (set-face-attribute 'default nil :height 120 :font "Consolas"))
-  ;;  )
-  (require 'font-utils)
-  (cond
-   ((eq window-system nil) nil)
-   ((font-utils-exists-p "Source Code Pro")
-    (let ((fontset "fontset-default"))
-      (set-fontset-font fontset 'latin
-                        (font-spec :family "Source Code Pro" :weight 'light :registry "unicode-bmp"))
-      (set-fontset-font fontset 'hangul
-                        '("NanumGothicCoding" . "unicode-bmp"))
-      (set-face-attribute 'default nil
-                          :font fontset
-                          :height 140))))
-  
-  
+    ;; (cond
+    ;;  ((eq window-system nil) nil)
+    ;;  ((font-existsp "DejaVu Sans Mono")
+    ;;   (set-face-attribute 'default nil :height 120 :font "DejaVu Sans Mono"))
+    ;;  ((font-existsp "Consolas")
+    ;;   (set-face-attribute 'default nil :height 120 :font "Consolas"))
+    ;;  )
+    (require 'font-utils)
+    (cond
+     ((eq window-system nil) nil)
+     ((font-utils-exists-p "Source Code Pro")
+      (let ((fontset "fontset-default"))
+        (set-fontset-font fontset 'latin
+                          (font-spec :family "Source Code Pro" :weight 'light :registry "unicode-bmp"))
+        (set-fontset-font fontset 'hangul
+                          '("NanumGothicCoding" . "unicode-bmp"))
+        (set-face-attribute 'default nil
+                            :font fontset
+                            :height 140))))
 #+end_src

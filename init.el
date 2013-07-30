@@ -27,3 +27,4 @@
        '(require 'org))
     ;; load up the starter kit
     (org-babel-load-file (expand-file-name "starter-kit.org" starter-kit-dir))))
+(put 'dired-find-alternate-file 'disabled nil)
