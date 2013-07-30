@@ -756,7 +756,7 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 #+end_src
 ** Org-Jekyll Site Generation
 #+name: org-jekyll
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
   ;;; Emacs org-mode support for blogging with Jekyll.
   ;;;
   ;;; To use, just put this file somewhere in your emacs load path and
@@ -866,12 +866,12 @@ Create =html= files form the =org= sources, to help with documentation. To set u
            :base-extension "org"
            :publishing-directory "~/git/org-homepage/rootdir/" ;; Path to your Jekyll project.
            :recursive t
-           :publishing-function org-publish-org-to-html
+           :publishing-function org-html-publish-to-html
            :headline-levels 6
            :html-extension "html"
            :body-only t ;; Only export section between &lt;body&gt; &lt;/body&gt; tags
            :section-numbers nil
-           :table-of-contents nil
+           :with-toc nil
 
            :author "Jinha Kim"
            :email "goldbar80@gmail.com"
@@ -1590,14 +1590,29 @@ Create =html= files form the =org= sources, to help with documentation. To set u
 (global-set-key (kbd "M-t") 'helm-for-files)
 (require 'helm-projectile)
 (global-set-key (kbd "C-x p") 'helm-projectile)
+(require 'helm-gtags)
+;;; Enable helm-gtags-mode
+(add-hook 'c-mode-hook 'helm-gtags-mode)
+(add-hook 'c++-mode-hook 'helm-gtags-mode)
+(add-hook 'asm-mode-hook 'helm-gtags-mode)
+;; customize
+(setq helm-gtags-path-style 'relative)
+(setq helm-gtags-ignore-case t)
+(setq helm-gtags-read-only t)
+;; key bindings
+(add-hook 'helm-gtags-mode-hook
+          '(lambda ()
+              (local-set-key (kbd "M-t") 'helm-gtags-find-tag)
+              (local-set-key (kbd "M-r") 'helm-gtags-find-rtag)
+              (local-set-key (kbd "M-s") 'helm-gtags-find-symbol)
+              (local-set-key (kbd "M-g M-p") 'helm-gtags-parse-file)
+              (local-set-key (kbd "C-t") 'helm-gtags-pop-stack)))
 #+end_src
 ** Projectile
 #+name: projectile
 #+begin_src emacs-lisp
   (require 'projectile)
   (projectile-global-mode)
-
-
 #+end_src
 
 ** Final Custom elements
