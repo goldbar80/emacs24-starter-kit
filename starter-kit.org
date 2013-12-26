@@ -66,7 +66,8 @@ If you want to keep your regular =~/.emacs.d= in place and just launch
 a single instance using the starter kit, try the following invocation:
 
 #+begin_src sh
-  emacs -q -l ~/path/to/emacs24-starter-kit/init.el
+  emacs -q -l ~/path/to/emacs24-starter-kit/init.el \
+      --eval "(run-hooks 'after-init-hook)"
 #+end_src
 
 Note that having a =~/.emacs= file might override the starter kit
@@ -347,7 +348,9 @@ interested in the actual code implementing the starter kit.
 - Work around a bug on OS X where system-name is FQDN.
   #+name: starter-kit-osX-workaround
   #+begin_src emacs-lisp
-    (if (eq system-type 'darwin)
+    (if (or
+        (eq system-type 'darwin)
+        (eq system-type 'berkeley-unix))
         (setq system-name (car (split-string system-name "\\."))))
   #+end_src
 
