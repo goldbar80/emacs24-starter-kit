@@ -13,15 +13,14 @@
 
   ;(if (not window-system)
   ;    (load-theme 'twilight-bright t) ;; Emacs started in tty
-    ;; (load-theme 'sanityinc-solarized-dark t)
     ;; (load-theme 'twilight-anti-bright t)
   ;  (load-theme 'base16-mocha-light t)
   ;  )
 
   (if (window-system)
+    ;;(load-theme 'base16-solarized-dark t)
     (load-theme 'base16-solarized-dark t)
     )
-
 #+end_src
 ** Toggle Window split
    #+begin_src emacs-lisp
@@ -63,6 +62,17 @@
      nil 'fullscreen
      (when (not (frame-parameter nil 'fullscreen)) 'fullboth)))
   (global-set-key (kbd "C-c f") 'tfullscreen)
+#+end_src
+
+** Flx-ido
+#+name: flx-ido
+#+begin_src emacs-lisp
+  (require 'flx-ido)
+  (ido-mode 1)
+  (ido-everywhere 1)
+  (flx-ido-mode 1)
+  ;; disable ido faces to see flx highlights.
+  (setq ido-use-faces nil)
 #+end_src
 
 ** Recent file menu
@@ -1137,24 +1147,46 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
   
-  ;; for twilight-anti-bright
-  (defface powerline-active1-g '((t (:foreground "#8eafd9" :background "#3b535e" :inherit mode-line)))
-    "Powerline face 1."
-    :group 'powerline)
+  ;; for twilight-anti-bright  
   
-  (defface powerline-active2-g '((t (:foreground "#aecff9" :background "#6b838e" :inherit mode-line)))
-    "Powerline face 2."
-    :group 'powerline)
+  (if (window-system)
+    (progn 
+      (defface powerline-active1-g '((t (:foreground "#8eafd9" :background "#3b535e" :inherit mode-line)))
+        "Powerline face 1."
+        :group 'powerline)
   
-  (defface powerline-inactive1-g
-    '((t (:foreground "#567e9a" :background "#3f4750" :inherit mode-line-inactive)))
-    "Powerline face 1."
-    :group 'powerline)
+      (defface powerline-active2-g '((t (:foreground "#aecff9" :background "#6b838e" :inherit mode-line)))
+        "Powerline face 2."
+        :group 'powerline)
   
-  (defface powerline-inactive2-g
-    '((t (:foreground "#769eba" :background "#6f7780" :inherit mode-line-inactive)))
-    "Powerline face 2."
-    :group 'powerline)
+      (defface powerline-inactive1-g
+        '((t (:foreground "#567e9a" :background "#3f4750" :inherit mode-line-inactive)))
+        "Powerline face 1."
+        :group 'powerline)
+  
+      (defface powerline-inactive2-g
+        '((t (:foreground "#769eba" :background "#6f7780" :inherit mode-line-inactive)))
+        "Powerline face 2."
+        :group 'powerline))
+    (progn 
+      (defface powerline-active1-g '((t (:foreground "black" :background "white" :inherit mode-line)))
+        "Powerline face 1."
+        :group 'powerline)
+  
+      (defface powerline-active2-g '((t (:foreground "white" :background "black" :inherit mode-line)))
+        "Powerline face 2."
+        :group 'powerline)
+  
+      (defface powerline-inactive1-g
+        '((t (:foreground "black" :background "DimGray" :inherit mode-line-inactive)))
+        "Powerline face 1."
+        :group 'powerline)
+  
+      (defface powerline-inactive2-g
+        '((t (:foreground "DimGray" :background "black" :inherit mode-line-inactive)))
+        "Powerline face 2."
+        :group 'powerline))
+    )
   
   ;; for base16-mocha
   
@@ -1197,73 +1229,64 @@ Create =html= files form the =org= sources, to help with documentation. To set u
   ;;   "Powerline face 2."
   ;;   :group 'powerline)
   
-  
-  (if (window-system)
-      (require 'powerline)
-    )  
+  (require 'powerline)
   
   
   
   
-  (if (window-system)
-      (setq-default mode-line-format
-                    '("%e"
-                      (:eval
-                       (let* ((active (powerline-selected-window-active))
-                              (face1 (if active 'powerline-active1-g
-                                       'powerline-inactive1-g))
-                              (face2 (if active 'powerline-active2-g
-                                       'powerline-inactive2-g))
-                              (lhs (list
-                                    (powerline-raw "%*" nil 'l)
-                                    ;;                              (powerline-raw (wg-mode-line-string) nil 'l)
-                                    (powerline-buffer-size nil 'l)
-                                    (powerline-buffer-id nil 'l)
-  
-                                    (powerline-raw " ")
-                                    (powerline-arrow-right nil face1)
-  
-                                    (when (boundp 'erc-modified-channels-object)
-                                      (powerline-raw erc-modified-channels-object
-                                                     face1 'l))
-  
-                                    (powerline-major-mode face1 'l)
-                                    (powerline-process face1)
-                                    (powerline-minor-modes face1 'l)
-                                    (powerline-narrow face1 'l)
-  
-                                    (powerline-raw " " face1)
-                                    (powerline-arrow-right face1 face2)
-  
-                                    (powerline-vc face2)))
-                              (rhs (list
-                                    (powerline-raw global-mode-string face2 'r)
-  
-                                    (powerline-arrow-left face2 face1)
-  
-                                    (powerline-raw "%4l" face1 'r)
-                                    (powerline-raw ":" face1)
-                                    (powerline-raw "%3c" face1 'r)
-  
-                                    (powerline-arrow-left face1 nil)
-                                    (powerline-raw " ")
-                                    (powerline-raw "%6p" nil 'r)
-  
-                                    (powerline-hud face2 face1))))
-                         (concat
-                          (powerline-render lhs)
-                          (powerline-fill face2 (powerline-width rhs))
-                          (powerline-render rhs))))))
-    )
+  (setq-default mode-line-format
+                '("%e"
+                  (:eval
+                   (let* ((active (powerline-selected-window-active))
+                          (face1 (if active 'powerline-active1-g
+                                   'powerline-inactive1-g))
+                          (face2 (if active 'powerline-active2-g
+                                   'powerline-inactive2-g))
+                          (lhs (list
+                                (powerline-raw "%*" nil 'l)
+                                ;;                              (powerline-raw (wg-mode-line-string) nil 'l)
+                                (powerline-buffer-size nil 'l)
+                                (powerline-buffer-id nil 'l)
+                                
+                                (powerline-raw " ")
+                                (powerline-arrow-right nil face1)
+                                
+                                (when (boundp 'erc-modified-channels-object)
+                                  (powerline-raw erc-modified-channels-object
+                                                 face1 'l))
+                                
+                                (powerline-major-mode face1 'l)
+                                (powerline-process face1)
+                                (powerline-minor-modes face1 'l)
+                                (powerline-narrow face1 'l)
+                                
+                                (powerline-raw " " face1)
+                                (powerline-arrow-right face1 face2)
+                                
+                                (powerline-vc face2)))
+                          (rhs (list
+                                (powerline-raw global-mode-string face2 'r)
+                                
+                                (powerline-arrow-left face2 face1)
+                                
+                                (powerline-raw "%4l" face1 'r)
+                                (powerline-raw ":" face1)
+                                (powerline-raw "%3c" face1 'r)
+                                
+                                (powerline-arrow-left face1 nil)
+                                (powerline-raw " ")
+                                (powerline-raw "%6p" nil 'r)
+                                
+                                (powerline-hud face2 face1))))
+                     (concat
+                      (powerline-render lhs)
+                      (powerline-fill face2 (powerline-width rhs))
+                      (powerline-render rhs))))))
   
   (setq display-time-string-forms '((format
                                      "%s/%s(%s) %s:%s" month day dayname 24-hours minutes)))
   
   (display-time-mode t)
-  
-  
-  
-  
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1629,11 +1652,13 @@ Create =html= files form the =org= sources, to help with documentation. To set u
               (local-set-key (kbd "M-g M-p") 'helm-gtags-parse-file)
               (local-set-key (kbd "C-t") 'helm-gtags-pop-stack)))
 #+end_src
+
 ** Projectile
 #+name: projectile
 #+begin_src emacs-lisp
   (require 'projectile)
   (projectile-global-mode)
+  (setq projectile-require-project-root nil)
 #+end_src
 
 ** Final Custom elements
